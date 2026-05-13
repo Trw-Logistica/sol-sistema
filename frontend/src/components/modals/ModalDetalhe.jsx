@@ -4,16 +4,18 @@ import { atualizarCarga, atualizarStatus, adicionarOcorrencia } from '../../serv
 import { STS, OC_TIPOS, fmtR, fmtD } from '../../constants';
 import SBadge from '../SBadge';
 
-export default function ModalDetalhe({ carga: cargaProp, total, idx, onPrev, onNext, clientes, mots, onUpdate, onAddOc, onClose }) {
+export default function ModalDetalhe({ carga: cargaProp, total, idx, onPrev, onNext, clientes, mots, operacionais = [], onUpdate, onAddOc, onClose }) {
   const { usuario, isAdmin } = useAuth();
   const [tab, setTab] = useState('info');
   const [cteV, setCteV] = useState(cargaProp.cte || '');
   const [ocF, setOcF] = useState({ tipo: 'Atraso', descricao: '' });
   const [salvando, setSalvando] = useState(false);
+  const [opSel, setOpSel] = useState(cargaProp.criado_por || '');
 
   useEffect(() => {
     setCteV(cargaProp.cte || '');
-  }, [cargaProp.id, cargaProp.cte]);
+    setOpSel(cargaProp.criado_por || '');
+  }, [cargaProp.id, cargaProp.cte, cargaProp.criado_por]);
 
   const carga = cargaProp;
   const admin = isAdmin();
@@ -32,6 +34,13 @@ export default function ModalDetalhe({ carga: cargaProp, total, idx, onPrev, onN
   const salvarStatus = async status => {
     setSalvando(true);
     try { await atualizarStatus(carga.id, status); onUpdate(); }
+    finally { setSalvando(false); }
+  };
+
+  const atribuirOp = async () => {
+    if (!opSel || opSel === carga.criado_por) return;
+    setSalvando(true);
+    try { await atualizarCarga(carga.id, { criado_por: opSel }); onUpdate(); }
     finally { setSalvando(false); }
   };
 
@@ -112,7 +121,23 @@ export default function ModalDetalhe({ carga: cargaProp, total, idx, onPrev, onN
                     }
                   </div>
                 </div>
+                <div className="di"><div className="dil">Responsável</div><div className="div2">{carga.usuarios?.nome || '—'}</div></div>
               </div>
+
+              {admin && operacionais.length > 0 && (
+                <div className="fg" style={{ marginTop: 14 }}>
+                  <label className="fl">Atribuir a operacional</label>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <select className="fi" value={opSel} onChange={ev => setOpSel(ev.target.value)} disabled={salvando} style={{ flex: 1 }}>
+                      <option value="">— Nenhum —</option>
+                      {operacionais.map(op => <option key={op.id} value={op.id}>{op.nome}</option>)}
+                    </select>
+                    <button className="btn btn-p btn-sm" onClick={atribuirOp} disabled={salvando || !opSel || opSel === carga.criado_por}>
+                      Atribuir
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {!carga.comprovante_url && canEdit && (
                 <button className="btn btn-p btn-sm" style={{ marginTop: 10 }} onClick={confirmarComprovante} disabled={salvando}>

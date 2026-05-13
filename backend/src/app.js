@@ -8,7 +8,7 @@ const clientesRoutes = require('./routes/clientes');
 const cargasRoutes = require('./routes/cargas');
 const dashboardRoutes = require('./routes/dashboard');
 
-const app = express();
+const app = express(); // S.O.L API
 
 const allowedOrigins = [
   'http://localhost:5173',

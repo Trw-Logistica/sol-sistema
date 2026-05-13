@@ -157,6 +157,11 @@ const atualizar = async (req, res) => {
     if (req.body[campo] !== undefined) updates[campo] = req.body[campo];
   }
 
+  console.log('[atualizar] user perfil:', req.user.perfil, 'criado_por body:', req.body.criado_por);
+  if (req.user.perfil?.toLowerCase() === 'admin' && req.body.criado_por !== undefined) {
+    updates.criado_por = req.body.criado_por;
+  }
+
   const { data, error } = await supabase
     .from('cargas')
     .update(updates)

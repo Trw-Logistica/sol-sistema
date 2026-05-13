@@ -40,10 +40,13 @@ export default function Cargas() {
       listarMotoristas(),
       admin ? listarUsuarios() : Promise.resolve([]),
     ]);
+    console.log('[Cargas] admin:', admin, 'usuarios bruto:', us);
+    const ops = us.filter(u => u.perfil === 'operacional' && u.ativo);
+    console.log('[Cargas] operacionais filtrados:', ops);
     setCargas(cg);
     setClientes(cl);
     setMots(mt);
-    setOperacionais(us.filter(u => u.perfil === 'operacional' && u.ativo));
+    setOperacionais(ops);
   };
 
   useEffect(() => { if (!authCarregando) carregar(); }, [authCarregando]);

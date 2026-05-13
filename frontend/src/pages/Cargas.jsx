@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { listarCargas, criarCarga, atualizarCarga, atualizarStatus } from '../services/cargas';
 import { listarClientes } from '../services/clientes';
 import { listarMotoristas, criarMotorista as criarMot } from '../services/motoristas';
+import { listarUsuarios } from '../services/usuarios';
 import { fmtR } from '../constants';
 import Icon from '../components/Icon';
 import ModalNovaCarga from '../components/modals/ModalNovaCarga';
@@ -18,12 +19,13 @@ const COL_CFG = {
 };
 
 export default function Cargas() {
-  const { usuario, isAdmin } = useAuth();
+  const { usuario, isAdmin, carregando: authCarregando } = useAuth();
   const admin = isAdmin();
 
   const [cargas, setCargas] = useState([]);
   const [clientes, setClientes] = useState([]);
   const [mots, setMots] = useState([]);
+  const [operacionais, setOperacionais] = useState([]);
   const [showNew, setShowNew] = useState(false);
   const [cargaEditando, setCargaEditando] = useState(null);
   const [detailCarga, setDetailCarga] = useState(null);
@@ -32,17 +34,19 @@ export default function Cargas() {
   const dragId = useRef(null);
 
   const carregar = async () => {
-    const [cg, cl, mt] = await Promise.all([
+    const [cg, cl, mt, us] = await Promise.all([
       listarCargas(),
       listarClientes(),
       listarMotoristas(),
+      admin ? listarUsuarios() : Promise.resolve([]),
     ]);
     setCargas(cg);
     setClientes(cl);
     setMots(mt);
+    setOperacionais(us.filter(u => u.perfil === 'operacional' && u.ativo));
   };
 
-  useEffect(() => { carregar(); }, []);
+  useEffect(() => { if (!authCarregando) carregar(); }, [authCarregando]);
 
   const allVisible = useMemo(() => {
     let list = cargas;
@@ -200,6 +204,12 @@ export default function Cargas() {
                       ) : (
                         <div className="kcard-nd">Sem motorista vinculado</div>
                       )}
+                      {admin && (
+                        <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 5, display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <span style={{ opacity: .6 }}>Op:</span>
+                          <span style={{ fontWeight: 500 }}>{c.usuarios?.nome || '—'}</span>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -237,6 +247,7 @@ export default function Cargas() {
           onNext={() => { const i = detailIdx; if (i < sortedVisible.length - 1) setDetailCarga(sortedVisible[i + 1]); }}
           clientes={clientes}
           mots={mots}
+          operacionais={operacionais}
           onUpdate={async () => {
             const detailId = detailCarga?.id;
             const [cg] = await Promise.all([listarCargas()]);

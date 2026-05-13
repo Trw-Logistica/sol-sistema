@@ -19,6 +19,7 @@ export default function ModalDetalhe({ carga: cargaProp, total, idx, onPrev, onN
 
   const carga = cargaProp;
   const admin = isAdmin();
+  console.log('[ModalDetalhe] admin:', admin, 'operacionais:', operacionais);
   const canEdit = admin || carga.criado_por === usuario?.id;
   const mot = carga.motoristas || mots?.find(m => m.id === carga.motorista_id);
   const cli = carga.clientes || clientes?.find(c => c.id === carga.cliente_id);

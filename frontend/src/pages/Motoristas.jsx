@@ -23,6 +23,9 @@ function MotCardModal({ m, onEdit, onClose }) {
             <div className="di"><div className="dil">Tipo de Carroceria</div><div className="div2">{m.carroceria || '—'}</div></div>
             <div className="di"><div className="dil">Placa do Veículo</div><div className="div2">{m.placa_cavalo ? <span className="placa-tag">{m.placa_cavalo}</span> : '—'}</div></div>
             <div className="di"><div className="dil">Placa da Carreta</div><div className="div2">{m.placa_carreta ? <span className="placa-tag-2">{m.placa_carreta} ↕</span> : '—'}</div></div>
+            {m.placa_carreta2 && (
+              <div className="di"><div className="dil">Placa da Carreta 2</div><div className="div2"><span className="placa-tag-2">{m.placa_carreta2} ↕</span></div></div>
+            )}
           </div>
         </div>
         <div className="mft">

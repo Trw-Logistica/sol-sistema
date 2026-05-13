@@ -97,7 +97,7 @@ export default function Historico() {
               </thead>
               <tbody>
                 {list.map(c => {
-                  const lq = (parseFloat(c.frete_cobrado) || 0) - (parseFloat(c.frete_pago) || 0);
+                  const lq = parseFloat(c.frete_liquido) || 0;
                   return (
                     <tr key={c.id} style={{ cursor: 'pointer' }} onClick={() => setDetail(c)}>
                       <td className="mono" style={{ fontWeight: 600 }}>{c.cte || c.numero || '—'}</td>

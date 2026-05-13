@@ -149,17 +149,19 @@ export default function Dashboard() {
 
   const sumCob = arr => arr.reduce((a, c) => a + (parseFloat(c.frete_cobrado) || 0), 0);
   const sumPago = arr => arr.reduce((a, c) => a + (parseFloat(c.frete_pago) || 0), 0);
-  const sumLiq = arr => arr.reduce((a, c) => a + (c.frete_liquido != null ? parseFloat(c.frete_liquido) : (parseFloat(c.frete_cobrado) || 0) - (parseFloat(c.frete_pago) || 0)), 0);
+  const sumLiqConcl = arr => arr.filter(c => c.status === 'concluido').reduce((a, c) => a + (parseFloat(c.frete_liquido) || 0), 0);
 
-  const cobrado = sumCob(list), pago = sumPago(list), liq = sumLiq(list);
-  const ticket = list.length ? Math.round(cobrado / list.length) : 0;
-  const margem = cobrado > 0 ? Math.round((liq / cobrado) * 100) : 0;
+  const cobrado = sumCob(list), pago = sumPago(list), liq = sumLiqConcl(list);
+  const concluidas = list.filter(c => c.status === 'concluido');
+  const cobradoConcluido = sumCob(concluidas);
+  const margem = cobradoConcluido > 0 ? Math.round((liq / cobradoConcluido) * 100) : 0;
   const ativas = list.filter(c => ACTIVE.includes(c.status)).length;
   const pendComp = list.filter(c => c.status === 'concluido' && !c.comprovante_url).length;
 
-  const prevCobrado = sumCob(prevList), prevPago = sumPago(prevList), prevLiq = sumLiq(prevList);
-  const prevTicket = prevList.length ? Math.round(prevCobrado / prevList.length) : 0;
-  const prevMargem = prevCobrado > 0 ? Math.round((prevLiq / prevCobrado) * 100) : 0;
+  const prevCobrado = sumCob(prevList), prevPago = sumPago(prevList), prevLiq = sumLiqConcl(prevList);
+  const prevConcluidas = prevList.filter(c => c.status === 'concluido');
+  const prevCobradoConcluido = sumCob(prevConcluidas);
+  const prevMargem = prevCobradoConcluido > 0 ? Math.round((prevLiq / prevCobradoConcluido) * 100) : 0;
 
   const trend = (cur, prev) => {
     if (prev === 0) return cur > 0 ? 100 : null;
@@ -172,7 +174,7 @@ export default function Dashboard() {
       const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - i);
       const dEnd = new Date(d); dEnd.setDate(dEnd.getDate() + 1);
       const dl = filterByRange(cargas, d, dEnd);
-      days.push({ cobrado: sumCob(dl), pago: sumPago(dl), liq: sumLiq(dl), cnt: dl.length });
+      days.push({ cobrado: sumCob(dl), pago: sumPago(dl), liq: sumLiqConcl(dl), cnt: dl.length });
     }
     return days;
   }, [cargas]);
@@ -264,7 +266,6 @@ export default function Dashboard() {
 
       {/* KPI Row 2 */}
       <div className="kpi-row2">
-        <KPICard label="Ticket Médio" value={fmtR(ticket)} trend={trend(ticket, prevTicket)} trendLabel={trendLabel} icon={<Icon n="receipt" sz={14} />} iconCls="kpi-icon-slate" />
         <KPICard label="Margem Líquida" value={margem + '%'} trend={period === 'tudo' ? undefined : (margem - prevMargem)} trendLabel={period === 'tudo' ? '' : `vs ${prevMargem}% anterior`} icon={<Icon n="percent" sz={14} />} iconCls={margem >= 20 ? 'kpi-icon-green' : margem >= 10 ? 'kpi-icon-amber' : 'kpi-icon-red'} />
         <KPICard label="Cargas Ativas" value={String(ativas)} trendLabel="em andamento agora" icon={<Icon n="activity" sz={14} />} iconCls="kpi-icon-blue" />
         <KPICard label="Aguardando Comprovante" value={String(pendComp)} trendLabel={pendComp > 0 ? 'precisam de comprovante' : 'tudo em dia'} icon={<Icon n="alert" sz={14} />} iconCls={pendComp > 0 ? 'kpi-icon-amber' : 'kpi-icon-green'} />

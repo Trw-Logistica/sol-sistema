@@ -160,26 +160,21 @@ export default function Cargas() {
           return (
             <div
               key={status}
-              className={`kcol ${cfg.cls}${isDragTarget ? (status === 'cancelado' ? ' drag-over-canc' : ' drag-over') : ''}${isCollapsed ? ' kcol-collapsed' : ''}`}
+              className={`kcol ${cfg.cls}${isDragTarget ? (status === 'cancelado' ? ' drag-over-canc' : ' drag-over') : ''}`}
               onDragOver={ev => onDragOver(ev, status)}
               onDragLeave={() => setDragOver(null)}
               onDrop={ev => onDrop(ev, status)}
             >
-              {isCollapsed ? (
-                <div className="kcol-collapsed-strip" onClick={() => toggleCollapse(status)} title={`Expandir ${cfg.label}`}>
-                  <span className="kcol-collapsed-arrow">▶</span>
-                  <span className="kcol-collapsed-label">{cfg.label}</span>
-                  <span className="kcol-cnt">{cards.length}</span>
-                </div>
-              ) : (
-              <>
               <div className="kcol-hd">
                 <div className="kcol-name">{cfg.label}</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <div className="kcol-cnt">{cards.length}</div>
-                  <button className="kcol-collapse-btn" title="Minimizar coluna" onClick={() => toggleCollapse(status)}>▼</button>
+                  <button className="kcol-collapse-btn" title={isCollapsed ? 'Expandir coluna' : 'Minimizar coluna'} onClick={() => toggleCollapse(status)}>
+                    {isCollapsed ? '▶' : '▼'}
+                  </button>
                 </div>
               </div>
+              {!isCollapsed && (
               <div className="kcards">
                 {cards.length === 0 ? (
                   <div style={{ padding: '18px 10px', textAlign: 'center', color: 'var(--text3)', fontSize: 11 }}>
@@ -240,7 +235,6 @@ export default function Cargas() {
                   );
                 })}
               </div>
-              </>
               )}
             </div>
           );

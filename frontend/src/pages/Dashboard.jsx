@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { listarCargas } from '../services/cargas';
-import { getRanking } from '../services/dashboard';
+import { getRanking, getRankingOperacionais } from '../services/dashboard';
 import { fmtR, fmtD, ACTIVE, HIST } from '../constants';
 import SBadge from '../components/SBadge';
 import Icon from '../components/Icon';
@@ -103,10 +103,14 @@ export default function Dashboard() {
   const [period, setPeriod] = useState('mes');
   const [cargas, setCargas] = useState([]);
   const [ranking, setRanking] = useState([]);
+  const [rankingOps, setRankingOps] = useState([]);
 
   useEffect(() => {
     listarCargas().then(setCargas);
-    if (admin) getRanking().then(setRanking).catch(() => {});
+    if (admin) {
+      getRanking().then(setRanking).catch(() => {});
+      getRankingOperacionais().then(setRankingOps).catch(() => {});
+    }
   }, [admin]);
 
   const now = new Date();
@@ -309,6 +313,34 @@ export default function Dashboard() {
                     <td style={{ fontFamily: 'var(--mo)', color: 'var(--green)' }}>{r.concluidas}</td>
                     <td style={{ fontFamily: 'var(--mo)' }}>{fmtR(r.faturamento)}</td>
                     <td style={{ fontFamily: 'var(--mo)', fontWeight: 600, color: r.margem >= 0 ? 'var(--green)' : 'var(--red)' }}>{fmtR(r.margem)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Ranking operacionais */}
+      {admin && rankingOps.length > 0 && (
+        <div style={{ ...card, marginBottom: 12 }}>
+          <div style={chd}>Ranking de Operacionais</div>
+          <div style={{ overflowX: 'auto' }}>
+            <table>
+              <thead>
+                <tr>{['#', 'Operacional', 'Total', 'Concluídas', 'Frete Líquido', '% no Prazo'].map(x => <th key={x}>{x}</th>)}</tr>
+              </thead>
+              <tbody>
+                {rankingOps.map((r, i) => (
+                  <tr key={r.operacional_id}>
+                    <td style={{ fontFamily: 'var(--mo)', color: 'var(--text3)', fontSize: 11 }}>#{i + 1}</td>
+                    <td style={{ fontWeight: 600 }}>{r.nome}</td>
+                    <td style={{ fontFamily: 'var(--mo)' }}>{r.total_cargas}</td>
+                    <td style={{ fontFamily: 'var(--mo)', color: 'var(--green)' }}>{r.concluidas}</td>
+                    <td style={{ fontFamily: 'var(--mo)', fontWeight: 600, color: r.frete_liquido >= 0 ? 'var(--green)' : 'var(--red)' }}>{fmtR(r.frete_liquido)}</td>
+                    <td style={{ fontFamily: 'var(--mo)', color: r.pct_prazo === null ? 'var(--text3)' : r.pct_prazo >= 80 ? 'var(--green)' : r.pct_prazo >= 50 ? 'var(--amber)' : 'var(--red)' }}>
+                      {r.pct_prazo === null ? '—' : r.pct_prazo + '%'}
+                    </td>
                   </tr>
                 ))}
               </tbody>

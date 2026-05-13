@@ -91,4 +91,52 @@ const ranking = async (req, res) => {
   res.json(resultado);
 };
 
-module.exports = { resumo, ranking };
+const rankingOperacionais = async (req, res) => {
+  const { data: cargas, error } = await supabase
+    .from('cargas')
+    .select('criado_por, usuarios!criado_por(nome), status, frete_cobrado, frete_pago, frete_liquido, data_entrega_real, previsao_entrega')
+    .not('criado_por', 'is', null);
+
+  if (error) return res.status(500).json({ error: error.message });
+
+  const mapa = {};
+
+  for (const carga of cargas) {
+    const uid = carga.criado_por;
+    if (!mapa[uid]) {
+      mapa[uid] = {
+        operacional_id: uid,
+        nome: carga.usuarios?.nome || 'Desconhecido',
+        total_cargas: 0,
+        concluidas: 0,
+        no_prazo: 0,
+        com_previsao: 0,
+        frete_liquido: 0,
+      };
+    }
+    mapa[uid].total_cargas++;
+    if (carga.status === 'concluido' || carga.status === 'entregue') {
+      mapa[uid].concluidas++;
+      if (carga.data_entrega_real && carga.previsao_entrega) {
+        mapa[uid].com_previsao++;
+        if (carga.data_entrega_real <= carga.previsao_entrega) mapa[uid].no_prazo++;
+      }
+    }
+    const lq = carga.frete_liquido != null
+      ? parseFloat(carga.frete_liquido)
+      : (parseFloat(carga.frete_cobrado) || 0) - (parseFloat(carga.frete_pago) || 0);
+    mapa[uid].frete_liquido += lq;
+  }
+
+  const resultado = Object.values(mapa)
+    .map(m => ({
+      ...m,
+      frete_liquido: parseFloat(m.frete_liquido.toFixed(2)),
+      pct_prazo: m.com_previsao > 0 ? Math.round((m.no_prazo / m.com_previsao) * 100) : null,
+    }))
+    .sort((a, b) => b.total_cargas - a.total_cargas || b.frete_liquido - a.frete_liquido);
+
+  res.json(resultado);
+};
+
+module.exports = { resumo, ranking, rankingOperacionais };

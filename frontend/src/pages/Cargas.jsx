@@ -253,8 +253,10 @@ export default function Cargas() {
           onUpdate={async () => {
             const detailId = detailCarga?.id;
             const cg = await carregar();
+            console.log('[onUpdate] cargas recarregadas:', cg?.length, 'detalhe id:', detailId);
             if (detailId && cg) {
               const updated = cg.find(c => c.id === detailId);
+              console.log('[onUpdate] carga atualizada:', updated?.usuarios);
               if (updated) setDetailCarga(updated);
             }
           }}

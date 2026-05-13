@@ -39,10 +39,13 @@ export default function ModalDetalhe({ carga: cargaProp, total, idx, onPrev, onN
 
   const atribuirOp = async () => {
     if (!opSel) return;
+    console.log('[atribuirOp] atribuindo carga:', carga.id, 'para operacional:', opSel);
     setSalvando(true);
     try {
-      await atualizarCarga(carga.id, { criado_por: opSel });
+      const res = await atualizarCarga(carga.id, { criado_por: opSel });
+      console.log('[atribuirOp] resposta atualizarCarga:', res);
       await onUpdate();
+      console.log('[atribuirOp] onUpdate concluído');
     } finally { setSalvando(false); }
   };
 

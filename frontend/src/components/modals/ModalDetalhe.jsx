@@ -38,10 +38,12 @@ export default function ModalDetalhe({ carga: cargaProp, total, idx, onPrev, onN
   };
 
   const atribuirOp = async () => {
-    if (!opSel || opSel === carga.criado_por) return;
+    if (!opSel) return;
     setSalvando(true);
-    try { await atualizarCarga(carga.id, { criado_por: opSel }); onUpdate(); }
-    finally { setSalvando(false); }
+    try {
+      await atualizarCarga(carga.id, { criado_por: opSel });
+      await onUpdate();
+    } finally { setSalvando(false); }
   };
 
   const salvarCTE = async () => {
@@ -132,7 +134,7 @@ export default function ModalDetalhe({ carga: cargaProp, total, idx, onPrev, onN
                       <option value="">— Nenhum —</option>
                       {operacionais.map(op => <option key={op.id} value={op.id}>{op.nome}</option>)}
                     </select>
-                    <button className="btn btn-p btn-sm" onClick={atribuirOp} disabled={salvando || !opSel || opSel === carga.criado_por}>
+                    <button className="btn btn-p btn-sm" onClick={atribuirOp} disabled={salvando || !opSel}>
                       Atribuir
                     </button>
                   </div>

@@ -239,7 +239,7 @@ export default function Dashboard() {
 
   const card = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden', boxShadow: 'var(--sh-xs)' };
   const chd = { padding: '12px 16px', borderBottom: '1px solid var(--border)', fontWeight: 600, fontSize: 13, display: 'flex', justifyContent: 'space-between', alignItems: 'center' };
-  const g3 = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12, marginBottom: 12 };
+  const g2 = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 };
 
   return (
     <div>
@@ -264,19 +264,11 @@ export default function Dashboard() {
         <KPICard label="Total de Cargas" value={String(list.length)} trend={trend(list.length, prevList.length)} trendLabel={trendLabel} spark={sparkData.map(d => d.cnt)} sparkColor="#0B162A" icon={<Icon n="package" sz={14} />} iconCls="kpi-icon-slate" primary />
       </div>
 
-      {/* KPI Row 2 */}
-      <div className="kpi-row2">
-        <KPICard label="Margem Líquida" value={margem + '%'} trend={period === 'tudo' ? undefined : (margem - prevMargem)} trendLabel={period === 'tudo' ? '' : `vs ${prevMargem}% anterior`} icon={<Icon n="percent" sz={14} />} iconCls={margem >= 20 ? 'kpi-icon-green' : margem >= 10 ? 'kpi-icon-amber' : 'kpi-icon-red'} />
-        <KPICard label="Cargas Ativas" value={String(ativas)} trendLabel="em andamento agora" icon={<Icon n="activity" sz={14} />} iconCls="kpi-icon-blue" />
-        <KPICard label="Aguardando Comprovante" value={String(pendComp)} trendLabel={pendComp > 0 ? 'precisam de comprovante' : 'tudo em dia'} icon={<Icon n="alert" sz={14} />} iconCls={pendComp > 0 ? 'kpi-icon-amber' : 'kpi-icon-green'} />
-      </div>
-
-      {/* Charts row */}
-      <div style={g3}>
-        {/* Cargas por Status */}
+      {/* KPI Row 2 + Cargas por Status */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 12, alignItems: 'stretch' }}>
         <div style={card}>
           <div style={chd}>Cargas por Status</div>
-          <div style={{ padding: '16px', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+          <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
             <DonutSVG segs={donut} />
             <div style={{ flex: 1 }}>
               {donut.map((s, i) => (
@@ -289,16 +281,19 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+        <KPICard label="Margem Líquida" value={margem + '%'} trend={period === 'tudo' ? undefined : (margem - prevMargem)} trendLabel={period === 'tudo' ? '' : `vs ${prevMargem}% anterior`} icon={<Icon n="percent" sz={14} />} iconCls={margem >= 20 ? 'kpi-icon-green' : margem >= 10 ? 'kpi-icon-amber' : 'kpi-icon-red'} />
+        <KPICard label="Cargas Ativas" value={String(ativas)} trendLabel="em andamento agora" icon={<Icon n="activity" sz={14} />} iconCls="kpi-icon-blue" />
+        <KPICard label="Aguardando Comprovante" value={String(pendComp)} trendLabel={pendComp > 0 ? 'precisam de comprovante' : 'tudo em dia'} icon={<Icon n="alert" sz={14} />} iconCls={pendComp > 0 ? 'kpi-icon-amber' : 'kpi-icon-green'} />
+      </div>
 
-        {/* Top Clientes */}
+      {/* Top Clientes + Top Operacionais */}
+      <div style={{ ...g2, gridTemplateColumns: admin ? '1fr 1fr' : '1fr' }}>
         <div style={card}>
           <div style={chd}>Top Clientes</div>
           <div style={{ padding: '14px 16px' }}>
             {topCli.length > 0 ? <MiniBar items={topCli} /> : <div style={{ fontSize: 12, color: 'var(--text3)', textAlign: 'center', padding: '16px 0' }}>Sem dados</div>}
           </div>
         </div>
-
-        {/* Top Operacionais (admin) */}
         {admin && (
           <div style={card}>
             <div style={chd}>Top Operacionais</div>
@@ -307,13 +302,13 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+      </div>
 
-        {/* Top Motoristas */}
-        <div style={card}>
-          <div style={chd}>Top Motoristas</div>
-          <div style={{ padding: '14px 16px' }}>
-            {topMot.length > 0 ? <MiniBar items={topMot} color="#0B162A" /> : <div style={{ fontSize: 12, color: 'var(--text3)', textAlign: 'center', padding: '16px 0' }}>Sem dados</div>}
-          </div>
+      {/* Top Motoristas */}
+      <div style={{ ...card, marginBottom: 12 }}>
+        <div style={chd}>Top Motoristas</div>
+        <div style={{ padding: '14px 16px' }}>
+          {topMot.length > 0 ? <MiniBar items={topMot} color="#0B162A" /> : <div style={{ fontSize: 12, color: 'var(--text3)', textAlign: 'center', padding: '16px 0' }}>Sem dados</div>}
         </div>
       </div>
 

@@ -239,7 +239,6 @@ export default function Dashboard() {
 
   const card = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden', boxShadow: 'var(--sh-xs)' };
   const chd = { padding: '12px 16px', borderBottom: '1px solid var(--border)', fontWeight: 600, fontSize: 13, display: 'flex', justifyContent: 'space-between', alignItems: 'center' };
-  const g2 = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 };
 
   return (
     <div>
@@ -286,29 +285,25 @@ export default function Dashboard() {
         <KPICard label="Aguardando Comprovante" value={String(pendComp)} trendLabel={pendComp > 0 ? 'precisam de comprovante' : 'tudo em dia'} icon={<Icon n="alert" sz={14} />} iconCls={pendComp > 0 ? 'kpi-icon-amber' : 'kpi-icon-green'} />
       </div>
 
-      {/* Top Clientes + Top Operacionais */}
-      <div style={{ ...g2, gridTemplateColumns: admin ? '1fr 1fr' : '1fr' }}>
+      {/* Top Clientes | Top Operacionais | Top Motoristas */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 12 }}>
         <div style={card}>
           <div style={chd}>Top Clientes</div>
           <div style={{ padding: '14px 16px' }}>
             {topCli.length > 0 ? <MiniBar items={topCli} /> : <div style={{ fontSize: 12, color: 'var(--text3)', textAlign: 'center', padding: '16px 0' }}>Sem dados</div>}
           </div>
         </div>
-        {admin && (
-          <div style={card}>
-            <div style={chd}>Top Operacionais</div>
-            <div style={{ padding: '14px 16px' }}>
-              {topOps.length > 0 ? <MiniBar items={topOps} color="#7C3AED" /> : <div style={{ fontSize: 12, color: 'var(--text3)', textAlign: 'center', padding: '16px 0' }}>Sem dados</div>}
-            </div>
+        <div style={card}>
+          <div style={chd}>Top Operacionais</div>
+          <div style={{ padding: '14px 16px' }}>
+            {topOps.length > 0 ? <MiniBar items={topOps} color="#7C3AED" /> : <div style={{ fontSize: 12, color: 'var(--text3)', textAlign: 'center', padding: '16px 0' }}>Sem dados</div>}
           </div>
-        )}
-      </div>
-
-      {/* Top Motoristas */}
-      <div style={{ ...card, marginBottom: 12 }}>
-        <div style={chd}>Top Motoristas</div>
-        <div style={{ padding: '14px 16px' }}>
-          {topMot.length > 0 ? <MiniBar items={topMot} color="#0B162A" /> : <div style={{ fontSize: 12, color: 'var(--text3)', textAlign: 'center', padding: '16px 0' }}>Sem dados</div>}
+        </div>
+        <div style={card}>
+          <div style={chd}>Top Motoristas</div>
+          <div style={{ padding: '14px 16px' }}>
+            {topMot.length > 0 ? <MiniBar items={topMot} color="#0B162A" /> : <div style={{ fontSize: 12, color: 'var(--text3)', textAlign: 'center', padding: '16px 0' }}>Sem dados</div>}
+          </div>
         </div>
       </div>
 

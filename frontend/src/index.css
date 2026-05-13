@@ -426,7 +426,7 @@ tr:hover td{background:var(--surface2)}
 }
 .sb-pill.expanded .sb-pill-top {
   padding: 14px 12px;
-  justify-content: space-between;
+  justify-content: flex-start;
 }
 
 .sb-pill-brand {
@@ -451,7 +451,12 @@ tr:hover td{background:var(--surface2)}
 .sb-name { font-size: 12px; font-weight: 800; color: #F1F5F9; letter-spacing: -.2px; }
 .sb-tagline { font-size: 9px; color: #4B6082; letter-spacing: .4px; text-transform: uppercase; margin-top: 1px; }
 
-/* Toggle: only visible when expanded */
+/* Toggle: always visible, repositioned above user card */
+.sb-toggle-wrap {
+  width: 100%; display: flex; justify-content: center;
+  padding: 6px 0 8px; flex-shrink: 0;
+}
+.sb-pill.expanded .sb-toggle-wrap { padding: 6px 9px 8px; justify-content: flex-end; }
 .sb-toggle {
   width: 26px; height: 26px;
   border: 1px solid rgba(255,255,255,.1);
@@ -460,10 +465,9 @@ tr:hover td{background:var(--surface2)}
   cursor: pointer;
   color: #7A90A8;
   flex-shrink: 0;
-  display: none; align-items: center; justify-content: center;
+  display: flex; align-items: center; justify-content: center;
   transition: all .15s;
 }
-.sb-pill.expanded .sb-toggle { display: flex; }
 .sb-toggle:hover { background: rgba(255,255,255,.14); color: #C4D0DC; border-color: rgba(255,255,255,.18); }
 
 /* â”€â”€ Nav items â”€â”€ */

@@ -65,9 +65,6 @@ export default function App() {
                 <div className="sb-tagline">Super Operador</div>
               </div>
             </div>
-            <button className="sb-toggle" onClick={() => setSbMin(p => !p)} title="Recolher menu">
-              <Icon n="chevronLeft" sz={12} />
-            </button>
           </div>
 
           <div className="sb-nav">
@@ -82,6 +79,12 @@ export default function App() {
                 <span className="sb-item-label">{n.label}</span>
               </div>
             ))}
+          </div>
+
+          <div className="sb-toggle-wrap">
+            <button className="sb-toggle" onClick={() => setSbMin(p => !p)} title={sbMin ? 'Expandir menu' : 'Recolher menu'}>
+              <Icon n={sbMin ? 'chevronRight' : 'chevronLeft'} sz={12} />
+            </button>
           </div>
 
           <div className="sb-bottom">

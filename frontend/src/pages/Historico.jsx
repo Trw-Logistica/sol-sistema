@@ -1,18 +1,25 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import { listarCargas } from '../services/cargas';
+import { listarUsuarios } from '../services/usuarios';
 import { HIST, fmtR, fmtD } from '../constants';
 import SBadge from '../components/SBadge';
 import ModalDetalhe from '../components/modals/ModalDetalhe';
 
 export default function Historico() {
+  const { isAdmin, carregando: authCarregando } = useAuth();
+  const admin = isAdmin();
+
   const [cargas, setCargas] = useState([]);
   const [clientes, setClientes] = useState([]);
   const [mots, setMots] = useState([]);
+  const [operacionais, setOperacionais] = useState([]);
   const [search, setSearch] = useState('');
   const [fSts, setFSts] = useState('');
   const [detail, setDetail] = useState(null);
 
   useEffect(() => {
+    if (authCarregando) return;
     listarCargas({ historico: 'true' }).then(data => {
       setCargas(data);
       const cls = {}; const ms = {};
@@ -23,11 +30,20 @@ export default function Historico() {
       setClientes(Object.values(cls));
       setMots(Object.values(ms));
     });
-  }, []);
+    if (admin) {
+      listarUsuarios().then(us =>
+        setOperacionais(us.filter(u => u.perfil === 'operacional' && u.ativo))
+      ).catch(() => {});
+    }
+  }, [authCarregando]);
 
   const reload = async (detailId) => {
-    const data = await listarCargas({ historico: 'true' });
+    const [data, us] = await Promise.all([
+      listarCargas({ historico: 'true' }),
+      admin ? listarUsuarios() : Promise.resolve([]),
+    ]);
     setCargas(data);
+    setOperacionais(us.filter(u => u.perfil === 'operacional' && u.ativo));
     if (detailId) {
       const updated = data.find(c => c.id === detailId);
       if (updated) setDetail(updated);
@@ -115,8 +131,9 @@ export default function Historico() {
           onNext={() => { const i = detailIdx; if (i < list.length - 1) setDetail(list[i + 1]); }}
           clientes={clientes}
           mots={mots}
-          onUpdate={() => { reload(detail?.id); }}
-          onAddOc={() => { reload(detail?.id); }}
+          operacionais={operacionais}
+          onUpdate={() => reload(detail?.id)}
+          onAddOc={() => reload(detail?.id)}
           onClose={() => setDetail(null)}
         />
       )}

@@ -31,7 +31,18 @@ export default function Cargas() {
   const [detailCarga, setDetailCarga] = useState(null);
   const [search, setSearch] = useState('');
   const [dragOver, setDragOver] = useState(null);
+  const [collapsed, setCollapsed] = useState(
+    () => JSON.parse(localStorage.getItem('kanban_collapsed') || '{}')
+  );
   const dragId = useRef(null);
+
+  const toggleCollapse = status => {
+    setCollapsed(prev => {
+      const next = { ...prev, [status]: !prev[status] };
+      localStorage.setItem('kanban_collapsed', JSON.stringify(next));
+      return next;
+    });
+  };
 
   const carregar = async () => {
     const [cg, cl, mt, us] = await Promise.all([
@@ -144,17 +155,30 @@ export default function Cargas() {
           const cards = allCols[status] || [];
           const isDragTarget = dragOver === status;
 
+          const isCollapsed = !!collapsed[status];
+
           return (
             <div
               key={status}
-              className={`kcol ${cfg.cls}${isDragTarget ? (status === 'cancelado' ? ' drag-over-canc' : ' drag-over') : ''}`}
+              className={`kcol ${cfg.cls}${isDragTarget ? (status === 'cancelado' ? ' drag-over-canc' : ' drag-over') : ''}${isCollapsed ? ' kcol-collapsed' : ''}`}
               onDragOver={ev => onDragOver(ev, status)}
               onDragLeave={() => setDragOver(null)}
               onDrop={ev => onDrop(ev, status)}
             >
+              {isCollapsed ? (
+                <div className="kcol-collapsed-strip" onClick={() => toggleCollapse(status)} title={`Expandir ${cfg.label}`}>
+                  <span className="kcol-collapsed-arrow">▶</span>
+                  <span className="kcol-collapsed-label">{cfg.label}</span>
+                  <span className="kcol-cnt">{cards.length}</span>
+                </div>
+              ) : (
+              <>
               <div className="kcol-hd">
                 <div className="kcol-name">{cfg.label}</div>
-                <div className="kcol-cnt">{cards.length}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div className="kcol-cnt">{cards.length}</div>
+                  <button className="kcol-collapse-btn" title="Minimizar coluna" onClick={() => toggleCollapse(status)}>▼</button>
+                </div>
               </div>
               <div className="kcards">
                 {cards.length === 0 ? (
@@ -216,6 +240,8 @@ export default function Cargas() {
                   );
                 })}
               </div>
+              </>
+              )}
             </div>
           );
         })}
@@ -253,10 +279,8 @@ export default function Cargas() {
           onUpdate={async () => {
             const detailId = detailCarga?.id;
             const cg = await carregar();
-            console.log('[onUpdate] cargas recarregadas:', cg?.length, 'detalhe id:', detailId);
             if (detailId && cg) {
               const updated = cg.find(c => c.id === detailId);
-              console.log('[onUpdate] carga atualizada:', updated?.usuarios);
               if (updated) setDetailCarga(updated);
             }
           }}

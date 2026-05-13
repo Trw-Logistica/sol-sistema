@@ -442,6 +442,7 @@ tr:hover td{background:var(--surface2)}
   transition: transform .15s, box-shadow .15s;
 }
 .sb-ico:hover { transform: scale(1.06); box-shadow: 0 4px 14px rgba(200,56,3,.6); }
+.sb-pill:not(.expanded) .sb-pill-brand { gap: 0; }
 .sb-pill-label {
   white-space: nowrap; overflow: hidden; min-width: 0;
   max-width: 0; opacity: 0;

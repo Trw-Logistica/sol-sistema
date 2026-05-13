@@ -3,7 +3,10 @@ const supabase = require('../config/supabase');
 const listar = async (req, res) => {
   const { ativo } = req.query;
 
-  let query = supabase.from('motoristas').select('*').order('nome');
+  let query = supabase
+    .from('motoristas')
+    .select('id, nome, telefone, tipo_veiculo, carroceria, placa_cavalo, placa_carreta, placa_carreta2, ativo, criado_em')
+    .order('nome');
   if (ativo !== undefined) query = query.eq('ativo', ativo === 'true');
 
   const { data, error } = await query;

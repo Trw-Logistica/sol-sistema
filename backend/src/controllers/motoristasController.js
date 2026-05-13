@@ -12,13 +12,13 @@ const listar = async (req, res) => {
 };
 
 const criar = async (req, res) => {
-  const { nome, telefone, tipo_veiculo, placa_cavalo, placa_carreta, carroceria } = req.body;
+  const { nome, telefone, tipo_veiculo, placa_cavalo, placa_carreta, placa_carreta2, carroceria } = req.body;
 
   if (!nome) return res.status(400).json({ error: 'Nome é obrigatório' });
 
   const { data, error } = await supabase
     .from('motoristas')
-    .insert({ nome, telefone, tipo_veiculo, placa_cavalo, placa_carreta, carroceria })
+    .insert({ nome, telefone, tipo_veiculo, placa_cavalo, placa_carreta, placa_carreta2, carroceria })
     .select()
     .single();
 
@@ -28,7 +28,7 @@ const criar = async (req, res) => {
 
 const atualizar = async (req, res) => {
   const { id } = req.params;
-  const { nome, telefone, tipo_veiculo, placa_cavalo, placa_carreta, carroceria, ativo } = req.body;
+  const { nome, telefone, tipo_veiculo, placa_cavalo, placa_carreta, placa_carreta2, carroceria, ativo } = req.body;
 
   const updates = {};
   if (nome !== undefined) updates.nome = nome;
@@ -36,6 +36,7 @@ const atualizar = async (req, res) => {
   if (tipo_veiculo !== undefined) updates.tipo_veiculo = tipo_veiculo;
   if (placa_cavalo !== undefined) updates.placa_cavalo = placa_cavalo;
   if (placa_carreta !== undefined) updates.placa_carreta = placa_carreta;
+  if (placa_carreta2 !== undefined) updates.placa_carreta2 = placa_carreta2;
   if (carroceria !== undefined) updates.carroceria = carroceria;
   if (ativo !== undefined) updates.ativo = ativo;
 

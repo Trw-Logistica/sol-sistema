@@ -136,7 +136,7 @@ export default function ModalNovaCarga({ clientes, mots, onSave, onClose, carga:
                 </div>
               </div>
               <div className="fgrid">
-                <div className="fg"><label className="fl">Placa do Cavalo</label><input className="fi" value={novoMot.placa_cavalo} onChange={setMot('placa_cavalo')} placeholder="ABC-1234" style={{ textTransform: 'uppercase' }} /></div>
+                <div className="fg"><label className="fl">Placa do Veículo</label><input className="fi" value={novoMot.placa_cavalo} onChange={setMot('placa_cavalo')} placeholder="ABC-1234" style={{ textTransform: 'uppercase' }} /></div>
                 <div className="fg"><label className="fl">Placa da Carreta</label><input className="fi" value={novoMot.placa_carreta} onChange={setMot('placa_carreta')} placeholder="XYZ-9999 (opcional)" style={{ textTransform: 'uppercase' }} /></div>
               </div>
             </div>

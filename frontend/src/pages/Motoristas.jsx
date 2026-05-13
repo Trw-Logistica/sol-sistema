@@ -21,7 +21,7 @@ function MotCardModal({ m, onEdit, onClose }) {
           <div className="dgrid">
             <div className="di"><div className="dil">Tipo de Veículo</div><div className="div2">{m.tipo_veiculo || '—'}</div></div>
             <div className="di"><div className="dil">Tipo de Carroceria</div><div className="div2">{m.carroceria || '—'}</div></div>
-            <div className="di"><div className="dil">Placa do Cavalo</div><div className="div2">{m.placa_cavalo ? <span className="placa-tag">{m.placa_cavalo}</span> : '—'}</div></div>
+            <div className="di"><div className="dil">Placa do Veículo</div><div className="div2">{m.placa_cavalo ? <span className="placa-tag">{m.placa_cavalo}</span> : '—'}</div></div>
             <div className="di"><div className="dil">Placa da Carreta</div><div className="div2">{m.placa_carreta ? <span className="placa-tag-2">{m.placa_carreta} ↕</span> : '—'}</div></div>
           </div>
         </div>
@@ -37,7 +37,8 @@ function MotCardModal({ m, onEdit, onClose }) {
   );
 }
 
-const BLANK = { nome: '', telefone: '', tipo_veiculo: '', carroceria: '', placa_cavalo: '', placa_carreta: '' };
+const BLANK = { nome: '', telefone: '', tipo_veiculo: '', carroceria: '', placa_cavalo: '', placa_carreta: '', placa_carreta2: '' };
+const DUPLO_EIXO = ['Bitrem', 'Rodotrem'];
 
 export default function Motoristas() {
   const [mots, setMots] = useState([]);
@@ -56,7 +57,7 @@ export default function Motoristas() {
 
   const openEdit = m => {
     setEdit(m || null);
-    setF(m ? { nome: m.nome, telefone: m.telefone || '', tipo_veiculo: m.tipo_veiculo || '', carroceria: m.carroceria || '', placa_cavalo: m.placa_cavalo || '', placa_carreta: m.placa_carreta || '' } : BLANK);
+    setF(m ? { nome: m.nome, telefone: m.telefone || '', tipo_veiculo: m.tipo_veiculo || '', carroceria: m.carroceria || '', placa_cavalo: m.placa_cavalo || '', placa_carreta: m.placa_carreta || '', placa_carreta2: m.placa_carreta2 || '' } : BLANK);
     setViewModal(null);
     setEditModal(true);
   };
@@ -113,7 +114,7 @@ export default function Motoristas() {
         ) : (
           <table>
             <thead>
-              <tr>{['Nome', 'Telefone', 'Veículo', 'Carroceria', 'Cavalo', 'Carreta', ''].map(x => <th key={x}>{x}</th>)}</tr>
+              <tr>{['Nome', 'Telefone', 'Tipo', 'Carroceria', 'Veículo', 'Carreta', ''].map(x => <th key={x}>{x}</th>)}</tr>
             </thead>
             <tbody>
               {filtered.map(m => (
@@ -175,9 +176,15 @@ export default function Motoristas() {
                 </div>
               </div>
               <div className="fgrid">
-                <div className="fg"><label className="fl">Placa do Cavalo</label><input className="fi" value={f.placa_cavalo} onChange={setFld('placa_cavalo')} placeholder="ABC-1234" style={{ textTransform: 'uppercase' }} /></div>
+                <div className="fg"><label className="fl">Placa do Veículo</label><input className="fi" value={f.placa_cavalo} onChange={setFld('placa_cavalo')} placeholder="ABC-1234" style={{ textTransform: 'uppercase' }} /></div>
                 <div className="fg"><label className="fl">Placa da Carreta</label><input className="fi" value={f.placa_carreta} onChange={setFld('placa_carreta')} placeholder="XYZ-9999 (opcional)" style={{ textTransform: 'uppercase' }} /></div>
               </div>
+              {DUPLO_EIXO.includes(f.tipo_veiculo) && (
+              <div className="fgrid">
+                <div className="fg"><label className="fl">Placa da Carreta 2</label><input className="fi" value={f.placa_carreta2} onChange={setFld('placa_carreta2')} placeholder="XYZ-9999 (opcional)" style={{ textTransform: 'uppercase' }} /></div>
+                <div className="fg" />
+              </div>
+              )}
             </div>
             <div className="mft">
               <div />

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { listarClientes, criarCliente, atualizarCliente, deletarCliente } from '../services/clientes';
+import { fmtTel } from '../constants';
 
 const BLANK = { nome: '', cnpj: '', telefone: '', email: '', cidade: '', uf: '' };
 
@@ -64,7 +65,7 @@ export default function Clientes() {
                   <td style={{ fontWeight: 600, fontSize: 13 }}>{c.nome}</td>
                   <td className="mono">{c.cnpj || '-'}</td>
                   <td>{[c.cidade, c.uf].filter(Boolean).join('/') || '-'}</td>
-                  <td>{c.telefone || '-'}</td>
+                  <td>{fmtTel(c.telefone) || '-'}</td>
                   <td>
                     <div style={{ display: 'flex', gap: 6 }}>
                       <button className="btn btn-g btn-sm" onClick={() => abrir(c)}>Editar</button>

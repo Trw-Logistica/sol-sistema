@@ -1,13 +1,13 @@
 import { useState, useEffect, useMemo } from 'react';
 import { listarMotoristas, criarMotorista, atualizarMotorista, deletarMotorista } from '../services/motoristas';
-import { VEICULOS, CARROCERIAS } from '../constants';
+import { VEICULOS, CARROCERIAS, fmtTel } from '../constants';
 
 function MotCardModal({ m, onEdit, onClose }) {
   return (
     <div className="ov">
       <div className="modal">
         <div className="mhd">
-          <div><div className="mttl">{m.nome}</div><div className="msub">{m.telefone || 'Sem telefone'}</div></div>
+          <div><div className="mttl">{m.nome}</div><div className="msub">{fmtTel(m.telefone) || 'Sem telefone'}</div></div>
           <button className="mx" onClick={onClose}>×</button>
         </div>
         <div className="mbd">
@@ -15,7 +15,7 @@ function MotCardModal({ m, onEdit, onClose }) {
             <div style={{ width: 44, height: 44, borderRadius: 10, background: 'var(--navy)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>🚛</div>
             <div>
               <div style={{ fontSize: 15, fontWeight: 700 }}>{m.nome}</div>
-              <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>{m.telefone || 'Sem telefone'}</div>
+              <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>{fmtTel(m.telefone) || 'Sem telefone'}</div>
             </div>
           </div>
           <div className="dgrid">
@@ -126,7 +126,7 @@ export default function Motoristas() {
                       onMouseLeave={ev => ev.target.style.opacity = '1'}
                     >{m.nome}</span>
                   </td>
-                  <td className="mono">{m.telefone || '-'}</td>
+                  <td className="mono">{fmtTel(m.telefone) || '-'}</td>
                   <td>{m.tipo_veiculo || '-'}</td>
                   <td>{m.carroceria || '-'}</td>
                   <td>{m.placa_cavalo ? <span className="placa-tag">{m.placa_cavalo}</span> : '-'}</td>

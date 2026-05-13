@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { listarCargas } from '../services/cargas';
-import { getRanking, getRankingOperacionais } from '../services/dashboard';
+import { getRanking } from '../services/dashboard';
 import { fmtR, fmtD, ACTIVE, HIST } from '../constants';
 import SBadge from '../components/SBadge';
 import Icon from '../components/Icon';
@@ -103,14 +103,10 @@ export default function Dashboard() {
   const [period, setPeriod] = useState('mes');
   const [cargas, setCargas] = useState([]);
   const [ranking, setRanking] = useState([]);
-  const [rankingOps, setRankingOps] = useState([]);
 
   useEffect(() => {
     listarCargas().then(setCargas);
-    if (admin) {
-      getRanking().then(setRanking).catch(() => {});
-      getRankingOperacionais().then(setRankingOps).catch(() => {});
-    }
+    if (admin) getRanking().then(setRanking).catch(() => {});
   }, [admin]);
 
   const now = new Date();
@@ -198,6 +194,21 @@ export default function Dashboard() {
       .map(x => ({ label: x.nome, val: x.val, display: fmtR(x.val) }));
   }, [list]);
 
+  const topOps = useMemo(() => {
+    if (!admin) return [];
+    const m = {};
+    list.forEach(c => {
+      if (!c.criado_por) return;
+      if (!m[c.criado_por]) m[c.criado_por] = { nome: c.usuarios?.nome || '—', val: 0 };
+      const lq = c.frete_liquido != null
+        ? parseFloat(c.frete_liquido)
+        : (parseFloat(c.frete_cobrado) || 0) - (parseFloat(c.frete_pago) || 0);
+      m[c.criado_por].val += lq;
+    });
+    return Object.values(m).sort((a, b) => b.val - a.val).slice(0, 5)
+      .map(x => ({ label: x.nome, val: x.val, display: fmtR(x.val) }));
+  }, [list, admin]);
+
   const topMot = useMemo(() => {
     const m = {};
     list.forEach(c => {
@@ -226,7 +237,7 @@ export default function Dashboard() {
 
   const card = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden', boxShadow: 'var(--sh-xs)' };
   const chd = { padding: '12px 16px', borderBottom: '1px solid var(--border)', fontWeight: 600, fontSize: 13, display: 'flex', justifyContent: 'space-between', alignItems: 'center' };
-  const g3 = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 12 };
+  const g3 = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12, marginBottom: 12 };
 
   return (
     <div>
@@ -286,6 +297,16 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Top Operacionais (admin) */}
+        {admin && (
+          <div style={card}>
+            <div style={chd}>Top Operacionais</div>
+            <div style={{ padding: '14px 16px' }}>
+              {topOps.length > 0 ? <MiniBar items={topOps} color="#7C3AED" /> : <div style={{ fontSize: 12, color: 'var(--text3)', textAlign: 'center', padding: '16px 0' }}>Sem dados</div>}
+            </div>
+          </div>
+        )}
+
         {/* Top Motoristas */}
         <div style={card}>
           <div style={chd}>Top Motoristas</div>
@@ -294,60 +315,6 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-
-      {/* Ranking operacionais (admin) */}
-      {admin && ranking.length > 0 && (
-        <div style={{ ...card, marginBottom: 12 }}>
-          <div style={chd}>Ranking de Motoristas</div>
-          <div style={{ overflowX: 'auto' }}>
-            <table>
-              <thead>
-                <tr>{['#', 'Motorista', 'Total', 'Concluídas', 'Faturamento', 'Margem'].map(x => <th key={x}>{x}</th>)}</tr>
-              </thead>
-              <tbody>
-                {ranking.slice(0, 10).map((r, i) => (
-                  <tr key={r.motorista_id}>
-                    <td style={{ fontFamily: 'var(--mo)', color: 'var(--text3)', fontSize: 11 }}>#{i + 1}</td>
-                    <td style={{ fontWeight: 600 }}>{r.nome}</td>
-                    <td style={{ fontFamily: 'var(--mo)' }}>{r.total_cargas}</td>
-                    <td style={{ fontFamily: 'var(--mo)', color: 'var(--green)' }}>{r.concluidas}</td>
-                    <td style={{ fontFamily: 'var(--mo)' }}>{fmtR(r.faturamento)}</td>
-                    <td style={{ fontFamily: 'var(--mo)', fontWeight: 600, color: r.margem >= 0 ? 'var(--green)' : 'var(--red)' }}>{fmtR(r.margem)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Ranking operacionais */}
-      {admin && rankingOps.length > 0 && (
-        <div style={{ ...card, marginBottom: 12 }}>
-          <div style={chd}>Ranking de Operacionais</div>
-          <div style={{ overflowX: 'auto' }}>
-            <table>
-              <thead>
-                <tr>{['#', 'Operacional', 'Total', 'Concluídas', 'Frete Líquido', '% no Prazo'].map(x => <th key={x}>{x}</th>)}</tr>
-              </thead>
-              <tbody>
-                {rankingOps.map((r, i) => (
-                  <tr key={r.operacional_id}>
-                    <td style={{ fontFamily: 'var(--mo)', color: 'var(--text3)', fontSize: 11 }}>#{i + 1}</td>
-                    <td style={{ fontWeight: 600 }}>{r.nome}</td>
-                    <td style={{ fontFamily: 'var(--mo)' }}>{r.total_cargas}</td>
-                    <td style={{ fontFamily: 'var(--mo)', color: 'var(--green)' }}>{r.concluidas}</td>
-                    <td style={{ fontFamily: 'var(--mo)', fontWeight: 600, color: r.frete_liquido >= 0 ? 'var(--green)' : 'var(--red)' }}>{fmtR(r.frete_liquido)}</td>
-                    <td style={{ fontFamily: 'var(--mo)', color: r.pct_prazo === null ? 'var(--text3)' : r.pct_prazo >= 80 ? 'var(--green)' : r.pct_prazo >= 50 ? 'var(--amber)' : 'var(--red)' }}>
-                      {r.pct_prazo === null ? '—' : r.pct_prazo + '%'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
 
       {/* Últimas cargas */}
       <div style={card}>

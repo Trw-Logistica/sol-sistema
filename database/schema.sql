@@ -32,8 +32,9 @@ CREATE TABLE motoristas (
   nome          TEXT NOT NULL,
   telefone      TEXT,
   tipo_veiculo  TEXT,
-  placa_cavalo  TEXT,
-  placa_carreta TEXT,
+  placa_cavalo   TEXT,
+  placa_carreta  TEXT,
+  placa_carreta2 TEXT,
   carroceria    TEXT,
   ativo         BOOLEAN NOT NULL DEFAULT TRUE,
   criado_em     TIMESTAMPTZ DEFAULT NOW()

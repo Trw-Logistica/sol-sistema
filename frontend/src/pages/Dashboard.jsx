@@ -190,8 +190,10 @@ export default function Dashboard() {
     list.forEach(c => {
       if (!c.cliente_id) return;
       if (!['concluido', 'entregue'].includes(c.status)) return;
+      const lq = parseFloat(c.frete_liquido);
+      if (!lq) return;
       if (!m[c.cliente_id]) m[c.cliente_id] = { id: c.cliente_id, nome: c.clientes?.nome || '—', val: 0 };
-      m[c.cliente_id].val += (parseFloat(c.frete_cobrado) || 0) - (parseFloat(c.frete_pago) || 0);
+      m[c.cliente_id].val += lq;
     });
     return Object.values(m).sort((a, b) => b.val - a.val).slice(0, 5)
       .map(x => ({ label: x.nome, val: x.val, display: fmtR(x.val) }));
@@ -203,10 +205,9 @@ export default function Dashboard() {
     list.forEach(c => {
       if (!c.criado_por) return;
       if (!['concluido', 'entregue'].includes(c.status)) return;
+      const lq = parseFloat(c.frete_liquido);
+      if (!lq) return;
       if (!m[c.criado_por]) m[c.criado_por] = { nome: c.usuarios?.nome || '—', val: 0 };
-      const lq = c.frete_liquido != null
-        ? parseFloat(c.frete_liquido)
-        : (parseFloat(c.frete_cobrado) || 0) - (parseFloat(c.frete_pago) || 0);
       m[c.criado_por].val += lq;
     });
     return Object.values(m).sort((a, b) => b.val - a.val).slice(0, 5)

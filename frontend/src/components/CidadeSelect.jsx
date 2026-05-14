@@ -1,70 +1,117 @@
-import { useMemo } from 'react';
-import Select from 'react-select';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import cidades from '../data/cidades.json';
 
+const CIDADES = cidades.filter(c => c.cidade && c.estado);
+
 const normalize = str =>
-  str.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-
-const customStyles = {
-  control: (base, state) => ({
-    ...base,
-    minHeight: 36,
-    fontSize: 13,
-    borderRadius: 8,
-    border: state.isFocused ? '1.5px solid var(--accent)' : '1.5px solid var(--border)',
-    boxShadow: state.isFocused ? '0 0 0 3px rgba(59,130,246,.15)' : 'none',
-    background: 'var(--surface)',
-    fontFamily: 'var(--fn)',
-    '&:hover': { borderColor: 'var(--accent)' },
-  }),
-  option: (base, state) => ({
-    ...base,
-    fontSize: 13,
-    fontFamily: 'var(--fn)',
-    background: state.isFocused ? 'var(--surface2)' : 'var(--surface)',
-    color: 'var(--text)',
-    cursor: 'pointer',
-  }),
-  menu: base => ({
-    ...base,
-    borderRadius: 8,
-    border: '1px solid var(--border)',
-    boxShadow: 'var(--sh-sm, 0 4px 16px rgba(0,0,0,.12))',
-    zIndex: 9999,
-  }),
-  placeholder: base => ({ ...base, color: 'var(--text3)', fontSize: 13 }),
-  singleValue: base => ({ ...base, color: 'var(--text)', fontSize: 13 }),
-  input: base => ({ ...base, color: 'var(--text)', fontSize: 13 }),
-  indicatorSeparator: () => ({ display: 'none' }),
-  dropdownIndicator: base => ({ ...base, padding: '0 6px', color: 'var(--text3)' }),
-};
-
-const filterOption = (option, inputValue) => {
-  if (!inputValue || inputValue.length < 2) return false;
-  const q = normalize(inputValue);
-  return normalize(option.data.cidade).includes(q) || normalize(option.data.estado).includes(q);
-};
+  (str || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 export default function CidadeSelect({ value, onChange, placeholder = 'Digite a cidade...' }) {
-  const selected = useMemo(
-    () => value ? (cidades.find(c => c.label === value) || { value, label: value, cidade: value, estado: '' }) : null,
-    [value]
-  );
+  const [inputVal, setInputVal] = useState(value || '');
+  const [open, setOpen] = useState(false);
+  const blurTimer = useRef(null);
+
+  useEffect(() => { setInputVal(value || ''); }, [value]);
+
+  const results = useMemo(() => {
+    const q = normalize(inputVal);
+    if (q.length < 2 || inputVal === value) return [];
+    return CIDADES.filter(c =>
+      normalize(c.cidade).includes(q) || normalize(c.estado).includes(q)
+    ).slice(0, 10);
+  }, [inputVal, value]);
+
+  const select = c => {
+    clearTimeout(blurTimer.current);
+    onChange(c.label);
+    setInputVal(c.label);
+    setOpen(false);
+  };
+
+  const clear = e => {
+    e.preventDefault();
+    onChange('');
+    setInputVal('');
+    setOpen(false);
+  };
+
+  const handleChange = e => {
+    setInputVal(e.target.value);
+    setOpen(true);
+    if (!e.target.value) onChange('');
+  };
+
+  const handleBlur = () => {
+    blurTimer.current = setTimeout(() => {
+      setOpen(false);
+      setInputVal(value || '');
+    }, 150);
+  };
+
+  const showHint = open && inputVal.length > 0 && inputVal.length < 2;
+  const showEmpty = open && inputVal.length >= 2 && results.length === 0 && inputVal !== value;
+  const showList = open && results.length > 0;
+
+  const dropStyle = {
+    position: 'absolute', top: 'calc(100% + 2px)', left: 0, right: 0, zIndex: 9999,
+    background: 'var(--surface)', border: '1px solid var(--border)',
+    borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,.12)',
+    overflow: 'hidden',
+  };
 
   return (
-    <Select
-      options={cidades}
-      value={selected}
-      onChange={opt => onChange(opt ? opt.label : '')}
-      filterOption={filterOption}
-      placeholder={placeholder}
-      noOptionsMessage={({ inputValue }) =>
-        !inputValue || inputValue.length < 2 ? 'Digite ao menos 2 caracteres' : 'Nenhuma cidade encontrada'
-      }
-      styles={customStyles}
-      isClearable
-      menuPortalTarget={document.body}
-      menuPosition="fixed"
-    />
+    <div style={{ position: 'relative' }}>
+      <div style={{ position: 'relative' }}>
+        <input
+          className="fi"
+          value={inputVal}
+          onChange={handleChange}
+          onFocus={() => setOpen(true)}
+          onBlur={handleBlur}
+          placeholder={placeholder}
+          autoComplete="off"
+          style={{ paddingRight: value ? 28 : undefined }}
+        />
+        {value && (
+          <button
+            type="button"
+            onMouseDown={clear}
+            style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: 18, lineHeight: 1, padding: '0 2px' }}
+          >×</button>
+        )}
+      </div>
+
+      {showHint && (
+        <div style={dropStyle}>
+          <div style={{ padding: '10px 12px', fontSize: 12, color: 'var(--text3)' }}>
+            Digite ao menos 2 caracteres
+          </div>
+        </div>
+      )}
+
+      {showEmpty && (
+        <div style={dropStyle}>
+          <div style={{ padding: '10px 12px', fontSize: 12, color: 'var(--text3)' }}>
+            Nenhuma cidade encontrada
+          </div>
+        </div>
+      )}
+
+      {showList && (
+        <div style={dropStyle}>
+          {results.map(c => (
+            <div
+              key={c.value}
+              onMouseDown={() => select(c)}
+              style={{ padding: '8px 12px', fontSize: 13, cursor: 'pointer', color: 'var(--text)', fontFamily: 'var(--fn)' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface2)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = ''; }}
+            >
+              {c.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

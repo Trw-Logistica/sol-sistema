@@ -9,7 +9,7 @@ const ETAPA_LABELS = { carregamento: 'Carga', em_transito: 'Trânsito', descarga
 const ETAPA_ORDER  = ['carregamento', 'em_transito', 'descarga'];
 const MON_STATUS   = ['em_transito', 'entregue'];
 
-export default function ModalDetalhe({ carga: cargaProp, total, idx, onPrev, onNext, clientes, mots, operacionais = [], onUpdate, onAddOc, onClose }) {
+export default function ModalDetalhe({ carga: cargaProp, total, idx, onPrev, onNext, clientes, mots, operacionais = [], onMonRefresh, onUpdate, onAddOc, onClose }) {
   const { usuario, isAdmin } = useAuth();
   const [tab, setTab] = useState('info');
   const [cteV, setCteV] = useState(cargaProp.cte || '');
@@ -94,6 +94,7 @@ export default function ModalDetalhe({ carga: cargaProp, total, idx, onPrev, onN
 
   const handleMonRefresh = async () => {
     await carregarMon();
+    onMonRefresh?.();
   };
 
   const handleCargaComplete = async () => {

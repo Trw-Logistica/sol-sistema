@@ -100,6 +100,11 @@ export default function Cargas() {
     return m;
   }, [allVisible]);
 
+  const refreshMonMap = async () => {
+    const mon = await getMonitoramentoAtivos().catch(() => ({}));
+    setMonMap(mon || {});
+  };
+
   const canEdit = c => admin || c.criado_por === usuario?.id;
 
   const salvarNova = async payload => {
@@ -307,6 +312,7 @@ export default function Cargas() {
           clientes={clientes}
           mots={mots}
           operacionais={operacionais}
+          onMonRefresh={refreshMonMap}
           onUpdate={async () => {
             const detailId = detailCarga?.id;
             const cg = await carregar();

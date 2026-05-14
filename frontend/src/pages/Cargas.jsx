@@ -226,7 +226,9 @@ export default function Cargas() {
                             title={isExpanded ? 'Recolher' : 'Expandir'}
                             onClick={ev => { ev.stopPropagation(); toggleCard(c.id); }}
                           >
-                            <Icon n={isExpanded ? 'chevronUp' : 'chevronDown'} sz={16} />
+                            <span style={{ display: 'inline-flex', transition: 'transform 250ms ease-in-out', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                              <Icon n="chevronDown" sz={16} />
+                            </span>
                           </button>
                         </div>
                       </div>
@@ -245,7 +247,7 @@ export default function Cargas() {
                       )}
 
                       {/* Expandable body */}
-                      <div style={{ overflow: 'hidden', maxHeight: isExpanded ? '240px' : '0px', transition: 'max-height 0.25s ease' }}>
+                      <div style={{ overflow: 'hidden', maxHeight: isExpanded ? '240px' : '0px', transition: 'max-height 0.25s ease-in-out' }}>
                         <div style={{ paddingTop: 8 }}>
                           <div className="kcard-route">
                             {c.origem}<span className="kcard-route-arrow"> → </span>{c.destino}

@@ -17,6 +17,7 @@ export default function ModalDetalhe({ carga: cargaProp, total, idx, onPrev, onN
   const [salvando, setSalvando] = useState(false);
   const [opSel, setOpSel] = useState(cargaProp.criado_por || '');
   const [monSteps, setMonSteps] = useState([]);
+  const [closing, setClosing] = useState(false);
 
   const carga = cargaProp;
   const admin = isAdmin();
@@ -102,9 +103,14 @@ export default function ModalDetalhe({ carga: cargaProp, total, idx, onPrev, onN
     await onUpdate();
   };
 
+  const handleClose = () => {
+    setClosing(true);
+    setTimeout(onClose, 180);
+  };
+
   return (
-    <div className="ov">
-      <div className="modal">
+    <div className={`ov${closing ? ' closing' : ''}`}>
+      <div className={`modal${closing ? ' closing' : ''}`}>
         <div className="mhd">
           <div>
             {showMon ? (
@@ -130,7 +136,7 @@ export default function ModalDetalhe({ carga: cargaProp, total, idx, onPrev, onN
               </>
             )}
           </div>
-          <button className="mx" onClick={onClose}>×</button>
+          <button className="mx" onClick={handleClose}>×</button>
         </div>
 
         <div className="mbd">
@@ -295,7 +301,7 @@ export default function ModalDetalhe({ carga: cargaProp, total, idx, onPrev, onN
             <span style={{ fontSize: 11, color: 'var(--text3)', padding: '0 4px', alignSelf: 'center' }}>{idx + 1} / {total}</span>
             <button className="btn btn-s btn-sm" disabled={idx >= total - 1} onClick={onNext}>Próximo →</button>
           </div>
-          <button className="btn btn-g btn-sm" onClick={onClose}>Fechar</button>
+          <button className="btn btn-g btn-sm" onClick={handleClose}>Fechar</button>
         </div>
       </div>
     </div>

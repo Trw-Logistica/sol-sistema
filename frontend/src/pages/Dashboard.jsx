@@ -105,6 +105,7 @@ export default function Dashboard() {
   const [ranking, setRanking] = useState([]);
 
   useEffect(() => {
+    console.log('%c[SOL Dashboard] build: 2026-05-14-v4 | topCli = frete_liquido only', 'color:#22c55e;font-weight:bold;font-size:13px');
     listarCargas().then(setCargas);
     if (admin) getRanking().then(setRanking).catch(() => {});
   }, [admin]);
@@ -188,11 +189,15 @@ export default function Dashboard() {
   const topCli = useMemo(() => {
     const m = {};
     list.forEach(c => {
+      const nome = c.clientes?.nome || '—';
+      if (nome.toUpperCase().includes('MBRF') || (c.clientes?.nome || '').toUpperCase().includes('CVG')) {
+        console.log(`[topCli:${nome}]`, { id: c.id, numero: c.numero, status: c.status, frete_liquido: c.frete_liquido, frete_cobrado: c.frete_cobrado, frete_pago: c.frete_pago });
+      }
       if (!c.cliente_id) return;
       if (c.status !== 'concluido') return;
       const lq = parseFloat(c.frete_liquido);
       if (!lq || lq <= 0) return;
-      if (!m[c.cliente_id]) m[c.cliente_id] = { id: c.cliente_id, nome: c.clientes?.nome || '—', val: 0 };
+      if (!m[c.cliente_id]) m[c.cliente_id] = { id: c.cliente_id, nome, val: 0 };
       m[c.cliente_id].val += lq;
     });
     return Object.values(m).sort((a, b) => b.val - a.val).slice(0, 5)

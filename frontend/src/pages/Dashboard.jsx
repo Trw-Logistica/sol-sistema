@@ -148,9 +148,14 @@ export default function Dashboard() {
     [cargas, period, periods]
   );
 
-  const sumCob = arr => arr.reduce((a, c) => a + (parseFloat(c.frete_cobrado) || 0), 0);
-  const sumPago = arr => arr.reduce((a, c) => a + (parseFloat(c.frete_pago) || 0), 0);
-  const sumLiqConcl = arr => arr.filter(c => c.status === 'concluido').reduce((a, c) => a + (parseFloat(c.frete_liquido) || 0), 0);
+  const COBRADO_STS = ['em_transito', 'entregue', 'concluido', 'cancelado'];
+  const sumCob = arr => arr.filter(c => COBRADO_STS.includes(c.status)).reduce((a, c) => a + (parseFloat(c.frete_cobrado) || 0), 0);
+  const sumPago = arr => arr.filter(c => COBRADO_STS.includes(c.status)).reduce((a, c) => a + (parseFloat(c.frete_pago) || 0), 0);
+  const sumLiqConcl = arr => arr.reduce((a, c) => {
+    if (c.status !== 'concluido') return a;
+    const lq = parseFloat(c.frete_liquido);
+    return (!lq || lq <= 0) ? a : a + lq;
+  }, 0);
 
   const cobrado = sumCob(list), pago = sumPago(list), liq = sumLiqConcl(list);
   const concluidas = list.filter(c => c.status === 'concluido');

@@ -6,6 +6,7 @@ import { listarMotoristas, criarMotorista as criarMot } from '../services/motori
 import { listarUsuarios } from '../services/usuarios';
 import { fmtR } from '../constants';
 import Icon from '../components/Icon';
+import SBadge from '../components/SBadge';
 import ModalNovaCarga from '../components/modals/ModalNovaCarga';
 import ModalDetalhe from '../components/modals/ModalDetalhe';
 
@@ -31,10 +32,13 @@ export default function Cargas() {
   const [detailCarga, setDetailCarga] = useState(null);
   const [search, setSearch] = useState('');
   const [dragOver, setDragOver] = useState(null);
+  const [expandedCards, setExpandedCards] = useState({});
   const [collapsed, setCollapsed] = useState(
     () => JSON.parse(localStorage.getItem('kanban_collapsed') || '{}')
   );
   const dragId = useRef(null);
+
+  const toggleCard = id => setExpandedCards(prev => ({ ...prev, [id]: !prev[id] }));
 
   const toggleCollapse = status => {
     setCollapsed(prev => {
@@ -185,6 +189,7 @@ export default function Cargas() {
                   const mot = c.motoristas || mots.find(x => x.id === c.motorista_id);
                   const lq = c.frete_liquido != null ? parseFloat(c.frete_liquido) : (parseFloat(c.frete_cobrado) || 0) - (parseFloat(c.frete_pago) || 0);
                   const editable = canEdit(c);
+                  const isExpanded = !!expandedCards[c.id];
 
                   return (
                     <div
@@ -195,42 +200,62 @@ export default function Cargas() {
                       onDragEnd={editable ? onDragEnd : undefined}
                       onClick={() => setDetailCarga(c)}
                     >
+                      {/* Always-visible summary */}
                       <div className="kcard-header">
                         <span className={`kcard-cte${!c.cte ? ' nc' : ''}`}>{c.cte || c.numero || 'Ag. CTE'}</span>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           {admin && <span className="kcard-liq" style={{ color: lq >= 0 ? 'var(--green)' : 'var(--red)' }}>{fmtR(lq)}</span>}
+                          <button
+                            className="kcard-edit-btn"
+                            title={isExpanded ? 'Recolher' : 'Expandir'}
+                            onClick={ev => { ev.stopPropagation(); toggleCard(c.id); }}
+                          >
+                            <Icon n={isExpanded ? 'chevronUp' : 'chevronDown'} sz={12} />
+                          </button>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
+                        <div className="kcard-client">{cl?.nome || '—'}</div>
+                        <SBadge status={c.status} />
+                      </div>
+
+                      {/* Expandable body */}
+                      <div style={{ overflow: 'hidden', maxHeight: isExpanded ? '240px' : '0px', transition: 'max-height 0.25s ease' }}>
+                        <div style={{ paddingTop: 8 }}>
+                          <div className="kcard-route">
+                            {c.origem}<span className="kcard-route-arrow"> → </span>{c.destino}
+                          </div>
+                          {mot ? (
+                            <div className="kcard-driver">
+                              <div style={{ width: 26, height: 26, borderRadius: 6, background: 'var(--navy)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}>🚛</div>
+                              <div className="kcard-driver-info">
+                                <div className="kcard-driver-name">{mot.nome}</div>
+                                <div className="kcard-driver-detail">{mot.placa_cavalo || mot.placa_carreta || '—'}</div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="kcard-nd">Sem motorista vinculado</div>
+                          )}
+                          {admin && (
+                            <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 5, display: 'flex', alignItems: 'center', gap: 4 }}>
+                              <span style={{ opacity: .6 }}>Op:</span>
+                              <span style={{ fontWeight: 500 }}>{c.usuarios?.nome || '—'}</span>
+                            </div>
+                          )}
                           {editable && (
-                            <button
-                              className="kcard-edit-btn"
-                              title="Editar carga"
-                              onClick={ev => { ev.stopPropagation(); setCargaEditando(c); }}
-                            >
-                              <Icon n="edit" sz={12} />
-                            </button>
+                            <div style={{ marginTop: 8 }}>
+                              <button
+                                className="kcard-edit-btn"
+                                title="Editar carga"
+                                style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', fontSize: 10 }}
+                                onClick={ev => { ev.stopPropagation(); setCargaEditando(c); }}
+                              >
+                                <Icon n="edit" sz={11} /> Editar
+                              </button>
+                            </div>
                           )}
                         </div>
                       </div>
-                      <div className="kcard-client">{cl?.nome || '—'}</div>
-                      <div className="kcard-route">
-                        {c.origem}<span className="kcard-route-arrow"> → </span>{c.destino}
-                      </div>
-                      {mot ? (
-                        <div className="kcard-driver">
-                          <div style={{ width: 26, height: 26, borderRadius: 6, background: 'var(--navy)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}>🚛</div>
-                          <div className="kcard-driver-info">
-                            <div className="kcard-driver-name">{mot.nome}</div>
-                            <div className="kcard-driver-detail">{mot.placa_cavalo || mot.placa_carreta || '—'}</div>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="kcard-nd">Sem motorista vinculado</div>
-                      )}
-                      {admin && (
-                        <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 5, display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <span style={{ opacity: .6 }}>Op:</span>
-                          <span style={{ fontWeight: 500 }}>{c.usuarios?.nome || '—'}</span>
-                        </div>
-                      )}
                     </div>
                   );
                 })}

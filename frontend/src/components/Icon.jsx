@@ -13,6 +13,7 @@ export default function Icon({ n, sz = 16, c = 'currentColor', sw = 2 }) {
     chevronLeft: <svg {...s}><path d="M15 18l-6-6 6-6"/></svg>,
     chevronRight: <svg {...s}><path d="M9 18l6-6-6-6"/></svg>,
     chevronDown: <svg {...s}><path d="M6 9l6 6 6-6"/></svg>,
+    chevronUp: <svg {...s}><path d="M18 15l-6-6-6 6"/></svg>,
     logout: <svg {...s}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>,
     plus: <svg {...s}><path d="M12 5v14M5 12h14"/></svg>,
     close: <svg {...s}><path d="M18 6L6 18M6 6l12 12"/></svg>,

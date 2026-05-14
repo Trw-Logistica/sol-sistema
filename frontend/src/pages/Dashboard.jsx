@@ -189,18 +189,14 @@ export default function Dashboard() {
     const m = {};
     list.forEach(c => {
       if (!c.cliente_id) return;
-      const nome = c.clientes?.nome || '—';
-      console.log('[topCli]', nome, '| status:', c.status, '| frete_liquido:', c.frete_liquido, '| frete_cobrado:', c.frete_cobrado, '| frete_pago:', c.frete_pago);
       if (c.status !== 'concluido') return;
       const lq = parseFloat(c.frete_liquido);
-      if (!lq) return;
-      if (!m[c.cliente_id]) m[c.cliente_id] = { id: c.cliente_id, nome, val: 0 };
+      if (!lq || lq <= 0) return;
+      if (!m[c.cliente_id]) m[c.cliente_id] = { id: c.cliente_id, nome: c.clientes?.nome || '—', val: 0 };
       m[c.cliente_id].val += lq;
     });
-    const result = Object.values(m).sort((a, b) => b.val - a.val).slice(0, 5)
+    return Object.values(m).sort((a, b) => b.val - a.val).slice(0, 5)
       .map(x => ({ label: x.nome, val: x.val, display: fmtR(x.val) }));
-    console.log('[topCli] resultado final:', result);
-    return result;
   }, [list]);
 
   const topOps = useMemo(() => {
@@ -210,7 +206,7 @@ export default function Dashboard() {
       if (!c.criado_por) return;
       if (c.status !== 'concluido') return;
       const lq = parseFloat(c.frete_liquido);
-      if (!lq) return;
+      if (!lq || lq <= 0) return;
       if (!m[c.criado_por]) m[c.criado_por] = { nome: c.usuarios?.nome || '—', val: 0 };
       m[c.criado_por].val += lq;
     });

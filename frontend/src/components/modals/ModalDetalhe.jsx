@@ -94,6 +94,10 @@ export default function ModalDetalhe({ carga: cargaProp, total, idx, onPrev, onN
 
   const handleMonRefresh = async () => {
     await carregarMon();
+  };
+
+  const handleCargaComplete = async () => {
+    await carregarMon();
     await onUpdate();
   };
 
@@ -278,8 +282,8 @@ export default function ModalDetalhe({ carga: cargaProp, total, idx, onPrev, onN
               cargaId={carga.id}
               steps={monSteps}
               canEdit={canEdit}
-              admin={admin}
               onRefresh={handleMonRefresh}
+              onComplete={handleCargaComplete}
             />
           )}
         </div>

@@ -3,8 +3,26 @@ import cidades from '../data/cidades.json';
 
 const CIDADES = cidades.filter(c => c.cidade && c.estado);
 
+// Lower index = higher priority in tie-breaking
+const COMMON = [
+  'São Paulo','Rio de Janeiro','Brasília','Salvador','Fortaleza',
+  'Belo Horizonte','Manaus','Curitiba','Recife','Porto Alegre',
+  'Belém','Goiânia','Guarulhos','Campinas','São Luís',
+  'Maceió','Natal','Teresina','Campo Grande','João Pessoa',
+  'Osasco','Santo André','São Bernardo do Campo','Jaboatão dos Guararapes',
+  'Ribeirão Preto','Uberlândia','Sorocaba','Contagem','Aracaju','Feira de Santana',
+];
+const COMMON_RANK = Object.fromEntries(COMMON.map((n, i) => [n, i]));
+
 const normalize = str =>
   (str || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+const rank = (c, q) => {
+  const nc = normalize(c.cidade);
+  const start = nc.startsWith(q) ? 0 : 1;
+  const common = COMMON_RANK[c.cidade] ?? 9999;
+  return [start, common, c.cidade];
+};
 
 export default function CidadeSelect({ value, onChange, placeholder = 'Digite a cidade...' }) {
   const [inputVal, setInputVal] = useState(value || '');
@@ -16,9 +34,14 @@ export default function CidadeSelect({ value, onChange, placeholder = 'Digite a 
   const results = useMemo(() => {
     const q = normalize(inputVal);
     if (q.length < 2 || inputVal === value) return [];
-    return CIDADES.filter(c =>
-      normalize(c.cidade).includes(q) || normalize(c.estado).includes(q)
-    ).slice(0, 10);
+    return CIDADES
+      .filter(c => normalize(c.cidade).includes(q) || normalize(c.estado).includes(q))
+      .sort((a, b) => {
+        const [as0, ac, al] = rank(a, q);
+        const [bs0, bc, bl] = rank(b, q);
+        return as0 - bs0 || ac - bc || al.localeCompare(bl, 'pt-BR');
+      })
+      .slice(0, 10);
   }, [inputVal, value]);
 
   const select = c => {

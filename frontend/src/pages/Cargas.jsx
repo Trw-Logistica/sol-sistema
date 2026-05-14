@@ -224,10 +224,10 @@ export default function Cargas() {
                       {(c.status === 'em_transito' || c.status === 'entregue') && (
                         <div className="kcard-mon">
                           {!monMap[c.id]
-                            ? '○ Aguardando CTE'
-                            : monMap[c.id] === 'carregamento' ? '● Carregamento'
-                            : monMap[c.id] === 'em_transito'  ? '● Em Trânsito'
-                            : '● Descarga'}
+                            ? 'Em Andamento'
+                            : monMap[c.id] === 'carregamento' ? '• Carga'
+                            : monMap[c.id] === 'em_transito'  ? '• Trânsito'
+                            : '• Descarga'}
                         </div>
                       )}
 

@@ -2,9 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { updateMonitoramento } from '../../services/cargas';
 
 const ETAPAS = [
-  { key: 'carregamento', label: 'Carregamento' },
-  { key: 'em_transito',  label: 'Em Trânsito'  },
-  { key: 'descarga',     label: 'Descarga'      },
+  { key: 'carregamento', label: 'Carga'    },
+  { key: 'em_transito',  label: 'Trânsito' },
+  { key: 'descarga',     label: 'Descarga' },
 ];
 
 function fmtHorario(iso) {

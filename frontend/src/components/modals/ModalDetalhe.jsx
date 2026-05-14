@@ -5,7 +5,7 @@ import { STS, OC_TIPOS, fmtR, fmtD } from '../../constants';
 import SBadge from '../SBadge';
 import TabMonitoramento from './TabMonitoramento';
 
-const ETAPA_LABELS = { carregamento: 'Carregamento', em_transito: 'Em Trânsito', descarga: 'Descarga' };
+const ETAPA_LABELS = { carregamento: 'Carga', em_transito: 'Trânsito', descarga: 'Descarga' };
 const ETAPA_ORDER  = ['carregamento', 'em_transito', 'descarga'];
 const MON_STATUS   = ['em_transito', 'entregue'];
 
@@ -46,7 +46,7 @@ export default function ModalDetalhe({ carga: cargaProp, total, idx, onPrev, onN
   // Compute header info for em_transito
   const lastCheckedKey = ETAPA_ORDER.slice().reverse().find(k => monSteps.find(s => s.etapa === k)?.concluido);
   const anyStepDone = !!lastCheckedKey;
-  const monSubtitle = lastCheckedKey ? `● ${ETAPA_LABELS[lastCheckedKey]} em andamento` : null;
+  const monSubtitle = lastCheckedKey ? `• ${ETAPA_LABELS[lastCheckedKey]} em andamento` : null;
 
   const tabs = [
     { id: 'info', label: 'Info' },

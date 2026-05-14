@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { listarCargas, criarCarga, atualizarCarga, atualizarStatus, getMonitoramentoAtivos } from '../services/cargas';
+import { listarCargas, criarCarga, atualizarCarga, atualizarStatus, getMonitoramentoAtivos, deletarCarga } from '../services/cargas';
 import { listarClientes } from '../services/clientes';
 import { listarMotoristas, criarMotorista as criarMot } from '../services/motoristas';
 import { listarUsuarios } from '../services/usuarios';
@@ -37,6 +37,7 @@ export default function Cargas() {
     () => JSON.parse(localStorage.getItem('kanban_collapsed') || '{}')
   );
   const dragId = useRef(null);
+  const [confirmDelete, setConfirmDelete] = useState(null);
 
   const toggleCard = id => setExpandedCards(prev => ({ ...prev, [id]: !prev[id] }));
 
@@ -103,6 +104,13 @@ export default function Cargas() {
   const refreshMonMap = async () => {
     const mon = await getMonitoramentoAtivos().catch(() => ({}));
     setMonMap(mon || {});
+  };
+
+  const excluirCarga = async id => {
+    await deletarCarga(id);
+    setCargas(prev => prev.filter(c => c.id !== id));
+    setConfirmDelete(null);
+    if (detailCarga?.id === id) setDetailCarga(null);
   };
 
   const canEdit = c => admin || c.criado_por === usuario?.id;
@@ -259,16 +267,54 @@ export default function Cargas() {
                               <span style={{ fontWeight: 500 }}>{c.usuarios?.nome || '—'}</span>
                             </div>
                           )}
-                          {editable && (
+                          {(editable || admin) && (
                             <div style={{ marginTop: 8 }}>
-                              <button
-                                className="kcard-edit-btn"
-                                title="Editar carga"
-                                style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', fontSize: 10 }}
-                                onClick={ev => { ev.stopPropagation(); setCargaEditando(c); }}
-                              >
-                                <Icon n="edit" sz={11} /> Editar
-                              </button>
+                              {confirmDelete === c.id ? (
+                                <div onClick={ev => ev.stopPropagation()}>
+                                  <div style={{ fontSize: 10, color: 'var(--red)', marginBottom: 5, fontWeight: 500 }}>
+                                    Tem certeza? Esta ação não pode ser desfeita.
+                                  </div>
+                                  <div style={{ display: 'flex', gap: 4 }}>
+                                    <button
+                                      className="btn btn-sm"
+                                      style={{ fontSize: 10, padding: '3px 8px', background: 'var(--red)', color: '#fff', border: 'none', borderRadius: 5, cursor: 'pointer' }}
+                                      onClick={() => excluirCarga(c.id)}
+                                    >
+                                      Confirmar exclusão
+                                    </button>
+                                    <button
+                                      className="btn btn-g btn-sm"
+                                      style={{ fontSize: 10, padding: '3px 8px' }}
+                                      onClick={() => setConfirmDelete(null)}
+                                    >
+                                      Cancelar
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div style={{ display: 'flex', gap: 6 }}>
+                                  {editable && (
+                                    <button
+                                      className="kcard-edit-btn"
+                                      title="Editar carga"
+                                      style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', fontSize: 10 }}
+                                      onClick={ev => { ev.stopPropagation(); setCargaEditando(c); }}
+                                    >
+                                      <Icon n="edit" sz={11} /> Editar
+                                    </button>
+                                  )}
+                                  {admin && (
+                                    <button
+                                      className="kcard-edit-btn"
+                                      title="Excluir carga"
+                                      style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', fontSize: 10, color: 'var(--red)' }}
+                                      onClick={ev => { ev.stopPropagation(); setConfirmDelete(c.id); }}
+                                    >
+                                      <Icon n="trash" sz={11} /> Excluir
+                                    </button>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>

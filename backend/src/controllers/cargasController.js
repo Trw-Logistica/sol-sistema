@@ -246,12 +246,14 @@ const adicionarOcorrencia = async (req, res) => {
 const deletar = async (req, res) => {
   const { id } = req.params;
 
-  const acesso = await verificarAcesso(req, id);
-  if (acesso.erro) return res.status(acesso.status).json({ error: acesso.erro });
-
-  if (acesso.carga.status !== 'cancelado') {
-    return res.status(400).json({ error: 'Apenas cargas com status "cancelado" podem ser excluídas' });
+  if (req.user.perfil !== 'admin') {
+    return res.status(403).json({ error: 'Apenas administradores podem excluir cargas.' });
   }
+
+  const { data, error: fetchErr } = await supabase
+    .from('cargas').select('id').eq('id', id).single();
+
+  if (fetchErr || !data) return res.status(404).json({ error: 'Carga não encontrada.' });
 
   const { error } = await supabase.from('cargas').delete().eq('id', id);
   if (error) return res.status(500).json({ error: error.message });

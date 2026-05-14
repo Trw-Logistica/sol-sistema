@@ -185,8 +185,11 @@ export default function Dashboard() {
   }, [cargas]);
 
   const bySts = useMemo(() => {
-    const m = { aguardando: 0, em_transito: 0, entregue: 0, concluido: 0, cancelado: 0 };
-    list.forEach(c => { if (m[c.status] !== undefined) m[c.status]++; });
+    const m = { aguardando: 0, em_transito: 0, concluido: 0, cancelado: 0 };
+    list.forEach(c => {
+      const s = c.status === 'entregue' ? 'em_transito' : c.status;
+      if (m[s] !== undefined) m[s]++;
+    });
     return m;
   }, [list]);
 
@@ -239,7 +242,6 @@ export default function Dashboard() {
   const donut = [
     { v: bySts.aguardando, c: '#F59E0B', l: 'Divulgação' },
     { v: bySts.em_transito, c: '#3B82F6', l: 'Em Andamento' },
-    { v: bySts.entregue, c: '#22C55E', l: 'Entregue' },
     { v: bySts.concluido, c: '#22C55E', l: 'Concluído' },
     { v: bySts.cancelado, c: '#EF4444', l: 'Cancelado' },
   ];

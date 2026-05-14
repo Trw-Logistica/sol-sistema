@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { today } from '../../constants';
 import MotSearch from '../MotSearch';
 import { VEICULOS, CARROCERIAS } from '../../constants';
+import CidadeSelect from '../CidadeSelect';
 
 const BLANK = {
   cte: '', cliente_id: '', origem: '', destino: '',
@@ -88,8 +89,14 @@ export default function ModalNovaCarga({ clientes, mots, onSave, onClose, carga:
 
           <div className="fsec">Rota</div>
           <div className="fgrid">
-            <div className="fg"><label className="fl">Origem *</label><input className="fi" value={f.origem} onChange={set('origem')} placeholder="Cidade de origem" /></div>
-            <div className="fg"><label className="fl">Destino *</label><input className="fi" value={f.destino} onChange={set('destino')} placeholder="Cidade de destino" /></div>
+            <div className="fg">
+              <label className="fl">Origem *</label>
+              <CidadeSelect value={f.origem} onChange={v => setF(p => ({ ...p, origem: v }))} placeholder="Digite a cidade de origem..." />
+            </div>
+            <div className="fg">
+              <label className="fl">Destino *</label>
+              <CidadeSelect value={f.destino} onChange={v => setF(p => ({ ...p, destino: v }))} placeholder="Digite a cidade de destino..." />
+            </div>
           </div>
           <div className="fgrid">
             <div className="fg"><label className="fl">Data de Coleta</label><input type="date" className="fi" value={f.data_coleta} onChange={set('data_coleta')} /></div>

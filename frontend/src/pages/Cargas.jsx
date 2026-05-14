@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { listarCargas, criarCarga, atualizarCarga, atualizarStatus } from '../services/cargas';
+import { listarCargas, criarCarga, atualizarCarga, atualizarStatus, getMonitoramentoAtivos } from '../services/cargas';
 import { listarClientes } from '../services/clientes';
 import { listarMotoristas, criarMotorista as criarMot } from '../services/motoristas';
 import { listarUsuarios } from '../services/usuarios';
@@ -31,6 +31,7 @@ export default function Cargas() {
   const [detailCarga, setDetailCarga] = useState(null);
   const [search, setSearch] = useState('');
   const [dragOver, setDragOver] = useState(null);
+  const [monMap, setMonMap] = useState({});
   const [expandedCards, setExpandedCards] = useState({});
   const [collapsed, setCollapsed] = useState(
     () => JSON.parse(localStorage.getItem('kanban_collapsed') || '{}')
@@ -48,17 +49,19 @@ export default function Cargas() {
   };
 
   const carregar = async () => {
-    const [cg, cl, mt, us] = await Promise.all([
+    const [cg, cl, mt, us, mon] = await Promise.all([
       listarCargas(),
       listarClientes(),
       listarMotoristas(),
       admin ? listarUsuarios() : Promise.resolve([]),
+      getMonitoramentoAtivos().catch(() => ({})),
     ]);
     const ops = us.filter(u => u.perfil === 'operacional' && u.ativo);
     setCargas(cg);
     setClientes(cl);
     setMots(mt);
     setOperacionais(ops);
+    setMonMap(mon || {});
     return cg;
   };
 
@@ -218,6 +221,15 @@ export default function Cargas() {
                         <div className="kcard-client">{cl?.nome || '—'}</div>
                         <SBadge status={c.status} />
                       </div>
+                      {(c.status === 'em_transito' || c.status === 'entregue') && (
+                        <div className="kcard-mon">
+                          {!monMap[c.id]
+                            ? '○ Aguardando CTE'
+                            : monMap[c.id] === 'carregamento' ? '● Carregamento'
+                            : monMap[c.id] === 'em_transito'  ? '● Em Trânsito'
+                            : '● Descarga'}
+                        </div>
+                      )}
 
                       {/* Expandable body */}
                       <div style={{ overflow: 'hidden', maxHeight: isExpanded ? '240px' : '0px', transition: 'max-height 0.25s ease' }}>

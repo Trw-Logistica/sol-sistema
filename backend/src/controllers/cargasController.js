@@ -259,4 +259,125 @@ const deletar = async (req, res) => {
   res.status(204).send();
 };
 
-module.exports = { listar, obter, criar, atualizar, atualizarStatus, adicionarOcorrencia, deletar };
+const ETAPA_ORDER = ['carregamento', 'em_transito', 'descarga'];
+
+const getMonitoramento = async (req, res) => {
+  const { id } = req.params;
+
+  const { data: carga, error: cargaErr } = await supabase
+    .from('cargas')
+    .select('id, criado_por')
+    .eq('id', id)
+    .single();
+
+  if (cargaErr || !carga) return res.status(404).json({ error: 'Carga não encontrada' });
+
+  if (req.user.perfil === 'operacional' && carga.criado_por !== req.user.id) {
+    return res.status(403).json({ error: 'Acesso negado' });
+  }
+
+  const { data, error } = await supabase
+    .from('cargas_monitoramento')
+    .select('*, usuarios!concluido_por(id, nome)')
+    .eq('carga_id', id);
+
+  if (error) return res.status(500).json({ error: error.message });
+
+  const result = ETAPA_ORDER.map(etapa => {
+    const rec = (data || []).find(d => d.etapa === etapa);
+    return rec || { carga_id: id, etapa, concluido: false, horario: null, concluido_por: null, usuarios: null };
+  });
+
+  res.json(result);
+};
+
+const getMonitoramentoAtivos = async (req, res) => {
+  let query = supabase.from('cargas').select('id').in('status', ['em_transito', 'entregue']);
+
+  if (req.user.perfil === 'operacional') {
+    query = query.eq('criado_por', req.user.id);
+  }
+
+  const { data: ativas } = await query;
+  if (!ativas || ativas.length === 0) return res.json({});
+
+  const ids = ativas.map(c => c.id);
+
+  const { data: rows, error } = await supabase
+    .from('cargas_monitoramento')
+    .select('carga_id, etapa')
+    .in('carga_id', ids)
+    .eq('concluido', true);
+
+  if (error) return res.status(500).json({ error: error.message });
+
+  const result = {};
+  (rows || []).forEach(row => {
+    const existing = result[row.carga_id];
+    const existingIdx = existing ? ETAPA_ORDER.indexOf(existing) : -1;
+    const rowIdx = ETAPA_ORDER.indexOf(row.etapa);
+    if (rowIdx > existingIdx) result[row.carga_id] = row.etapa;
+  });
+
+  res.json(result);
+};
+
+const updateMonitoramento = async (req, res) => {
+  const { id, etapa } = req.params;
+  const { concluido, horario } = req.body;
+
+  if (!ETAPA_ORDER.includes(etapa)) {
+    return res.status(400).json({ error: 'Etapa inválida' });
+  }
+
+  const { data: carga, error: cargaErr } = await supabase
+    .from('cargas')
+    .select('id, criado_por')
+    .eq('id', id)
+    .single();
+
+  if (cargaErr || !carga) return res.status(404).json({ error: 'Carga não encontrada' });
+
+  if (req.user.perfil === 'operacional' && carga.criado_por !== req.user.id) {
+    return res.status(403).json({ error: 'Acesso negado' });
+  }
+
+  const { data: existing } = await supabase
+    .from('cargas_monitoramento')
+    .select('*')
+    .eq('carga_id', id)
+    .eq('etapa', etapa)
+    .maybeSingle();
+
+  const now = new Date().toISOString();
+  let upsertData;
+
+  if (concluido === false) {
+    upsertData = { carga_id: id, etapa, concluido: false, horario: null, concluido_por: null, updated_at: now };
+  } else if (existing?.concluido) {
+    // Already checked — admin editing horario only, preserve concluido_por
+    upsertData = { ...existing, horario: horario ?? existing.horario, updated_at: now };
+  } else {
+    // Newly checking
+    upsertData = { carga_id: id, etapa, concluido: true, horario: horario || now, concluido_por: req.user.id, updated_at: now };
+  }
+
+  const { data, error } = await supabase
+    .from('cargas_monitoramento')
+    .upsert(upsertData, { onConflict: 'carga_id,etapa' })
+    .select('*, usuarios!concluido_por(id, nome)')
+    .single();
+
+  if (error) return res.status(500).json({ error: error.message });
+
+  if (etapa === 'descarga' && concluido !== false) {
+    await supabase
+      .from('cargas')
+      .update({ status: 'concluido', atualizado_em: now })
+      .eq('id', id);
+  }
+
+  res.json(data);
+};
+
+module.exports = { listar, obter, criar, atualizar, atualizarStatus, adicionarOcorrencia, deletar, getMonitoramento, getMonitoramentoAtivos, updateMonitoramento };

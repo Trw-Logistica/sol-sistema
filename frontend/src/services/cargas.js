@@ -20,3 +20,12 @@ export const adicionarOcorrencia = (id, data) =>
 
 export const deletarCarga = id =>
   api.delete(`/cargas/${id}`);
+
+export const getMonitoramento = id =>
+  api.get(`/cargas/${id}/monitoramento`).then(r => r.data);
+
+export const getMonitoramentoAtivos = () =>
+  api.get('/cargas/monitoramento/ativos').then(r => r.data);
+
+export const updateMonitoramento = (id, etapa, data) =>
+  api.patch(`/cargas/${id}/monitoramento/${etapa}`, data).then(r => r.data);

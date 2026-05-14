@@ -1,8 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { atualizarCarga, atualizarStatus, adicionarOcorrencia } from '../../services/cargas';
+import { atualizarCarga, atualizarStatus, adicionarOcorrencia, getMonitoramento } from '../../services/cargas';
 import { STS, OC_TIPOS, fmtR, fmtD } from '../../constants';
 import SBadge from '../SBadge';
+import TabMonitoramento from './TabMonitoramento';
+
+const ETAPA_LABELS = { carregamento: 'Carregamento', em_transito: 'Em Trânsito', descarga: 'Descarga' };
+const ETAPA_ORDER  = ['carregamento', 'em_transito', 'descarga'];
+const MON_STATUS   = ['em_transito', 'entregue'];
 
 export default function ModalDetalhe({ carga: cargaProp, total, idx, onPrev, onNext, clientes, mots, operacionais = [], onUpdate, onAddOc, onClose }) {
   const { usuario, isAdmin } = useAuth();
@@ -11,11 +16,7 @@ export default function ModalDetalhe({ carga: cargaProp, total, idx, onPrev, onN
   const [ocF, setOcF] = useState({ tipo: 'Atraso', descricao: '' });
   const [salvando, setSalvando] = useState(false);
   const [opSel, setOpSel] = useState(cargaProp.criado_por || '');
-
-  useEffect(() => {
-    setCteV(cargaProp.cte || '');
-    setOpSel(cargaProp.criado_por || '');
-  }, [cargaProp.id, cargaProp.cte, cargaProp.criado_por]);
+  const [monSteps, setMonSteps] = useState([]);
 
   const carga = cargaProp;
   const admin = isAdmin();
@@ -24,11 +25,35 @@ export default function ModalDetalhe({ carga: cargaProp, total, idx, onPrev, onN
   const cli = carga.clientes || clientes?.find(c => c.id === carga.cliente_id);
   const lq = carga.frete_liquido != null ? parseFloat(carga.frete_liquido) : (parseFloat(carga.frete_cobrado) || 0) - (parseFloat(carga.frete_pago) || 0);
 
+  const showMon = MON_STATUS.includes(carga.status);
+
+  const carregarMon = async () => {
+    if (!showMon) return;
+    try { setMonSteps(await getMonitoramento(carga.id)); } catch {}
+  };
+
+  useEffect(() => {
+    setCteV(cargaProp.cte || '');
+    setOpSel(cargaProp.criado_por || '');
+    setMonSteps([]);
+    carregarMon();
+  }, [cargaProp.id]);
+
+  useEffect(() => {
+    if (showMon && monSteps.length === 0) carregarMon();
+  }, [carga.status]);
+
+  // Compute header info for em_transito
+  const lastCheckedKey = ETAPA_ORDER.slice().reverse().find(k => monSteps.find(s => s.etapa === k)?.concluido);
+  const anyStepDone = !!lastCheckedKey;
+  const monSubtitle = lastCheckedKey ? `● ${ETAPA_LABELS[lastCheckedKey]} em andamento` : null;
+
   const tabs = [
     { id: 'info', label: 'Info' },
-    { id: 'cte', label: 'CTE' },
-    { id: 'fin', label: 'Financeiro' },
-    { id: 'oc', label: `Ocorrências (${(carga.ocorrencias || []).length})` },
+    { id: 'cte',  label: 'CTE' },
+    { id: 'fin',  label: 'Financeiro' },
+    { id: 'oc',   label: `Ocorrências (${(carga.ocorrencias || []).length})` },
+    ...(showMon ? [{ id: 'mon', label: 'Monitoramento' }] : []),
   ];
 
   const salvarStatus = async status => {
@@ -40,10 +65,8 @@ export default function ModalDetalhe({ carga: cargaProp, total, idx, onPrev, onN
   const atribuirOp = async () => {
     if (!opSel) return;
     setSalvando(true);
-    try {
-      await atualizarCarga(carga.id, { criado_por: opSel });
-      await onUpdate();
-    } finally { setSalvando(false); }
+    try { await atualizarCarga(carga.id, { criado_por: opSel }); await onUpdate(); }
+    finally { setSalvando(false); }
   };
 
   const salvarCTE = async () => {
@@ -69,16 +92,38 @@ export default function ModalDetalhe({ carga: cargaProp, total, idx, onPrev, onN
     } finally { setSalvando(false); }
   };
 
+  const handleMonRefresh = async () => {
+    await carregarMon();
+    await onUpdate();
+  };
+
   return (
     <div className="ov">
       <div className="modal">
         <div className="mhd">
           <div>
-            <div className="mttl">{carga.cte || <span style={{ color: 'var(--amber)' }}>Aguardando CTE</span>}</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 5 }}>
-              <SBadge status={carga.status} />
-              <span style={{ fontSize: 11, color: 'var(--text3)' }}>{carga.origem} → {carga.destino}</span>
-            </div>
+            {showMon ? (
+              <>
+                <div className="mttl">
+                  {anyStepDone ? 'Em Andamento' : <span style={{ color: 'var(--amber)' }}>Aguardando CTE</span>}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 5 }}>
+                  <SBadge status={carga.status} />
+                  {monSubtitle
+                    ? <span style={{ fontSize: 11, color: '#166534', fontWeight: 600 }}>{monSubtitle}</span>
+                    : <span style={{ fontSize: 11, color: 'var(--text3)' }}>{carga.origem} → {carga.destino}</span>
+                  }
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="mttl">{carga.cte || <span style={{ color: 'var(--amber)' }}>Aguardando CTE</span>}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 5 }}>
+                  <SBadge status={carga.status} />
+                  <span style={{ fontSize: 11, color: 'var(--text3)' }}>{carga.origem} → {carga.destino}</span>
+                </div>
+              </>
+            )}
           </div>
           <button className="mx" onClick={onClose}>×</button>
         </div>
@@ -134,9 +179,7 @@ export default function ModalDetalhe({ carga: cargaProp, total, idx, onPrev, onN
                       <option value="">— Nenhum —</option>
                       {operacionais.map(op => <option key={op.id} value={op.id}>{op.nome}</option>)}
                     </select>
-                    <button className="btn btn-p btn-sm" onClick={atribuirOp} disabled={salvando || !opSel}>
-                      Atribuir
-                    </button>
+                    <button className="btn btn-p btn-sm" onClick={atribuirOp} disabled={salvando || !opSel}>Atribuir</button>
                   </div>
                 </div>
               )}
@@ -228,6 +271,16 @@ export default function ModalDetalhe({ carga: cargaProp, total, idx, onPrev, onN
                 </div>
               )}
             </div>
+          )}
+
+          {tab === 'mon' && showMon && (
+            <TabMonitoramento
+              cargaId={carga.id}
+              steps={monSteps}
+              canEdit={canEdit}
+              admin={admin}
+              onRefresh={handleMonRefresh}
+            />
           )}
         </div>
 

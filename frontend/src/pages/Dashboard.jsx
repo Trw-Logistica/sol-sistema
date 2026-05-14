@@ -201,11 +201,12 @@ export default function Dashboard() {
       if (c.status !== 'concluido') return;
       const lq = parseFloat(c.frete_liquido);
       if (!lq || lq <= 0) return;
-      if (!m[c.cliente_id]) m[c.cliente_id] = { id: c.cliente_id, nome, val: 0 };
+      if (!m[c.cliente_id]) m[c.cliente_id] = { id: c.cliente_id, nome, val: 0, cnt: 0 };
       m[c.cliente_id].val += lq;
+      m[c.cliente_id].cnt++;
     });
     return Object.values(m).sort((a, b) => b.val - a.val).slice(0, 5)
-      .map(x => ({ label: x.nome, val: x.val, display: fmtR(x.val) }));
+      .map(x => ({ label: x.nome, val: x.val, display: `${fmtR(x.val)} · ${x.cnt} ${x.cnt === 1 ? 'carga' : 'cargas'}` }));
   }, [list]);
 
   const topOps = useMemo(() => {
@@ -216,11 +217,12 @@ export default function Dashboard() {
       if (c.status !== 'concluido') return;
       const lq = parseFloat(c.frete_liquido);
       if (!lq || lq <= 0) return;
-      if (!m[c.criado_por]) m[c.criado_por] = { nome: c.usuarios?.nome || '—', val: 0 };
+      if (!m[c.criado_por]) m[c.criado_por] = { nome: c.usuarios?.nome || '—', val: 0, cnt: 0 };
       m[c.criado_por].val += lq;
+      m[c.criado_por].cnt++;
     });
     return Object.values(m).sort((a, b) => b.val - a.val).slice(0, 5)
-      .map(x => ({ label: x.nome, val: x.val, display: fmtR(x.val) }));
+      .map(x => ({ label: x.nome, val: x.val, display: `${fmtR(x.val)} · ${x.cnt} ${x.cnt === 1 ? 'carga' : 'cargas'}` }));
   }, [list, admin]);
 
   const topMot = useMemo(() => {

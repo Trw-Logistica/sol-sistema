@@ -1,6 +1,11 @@
 ﻿
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:rgba(0,0,0,.3)}
+html{scrollbar-width:thin;scrollbar-color:rgba(0,0,0,.15) transparent}
 :root{
   --bg:#F5F5F4;
   --surface:#FFFFFF;
@@ -153,6 +158,10 @@ tr:hover td{background:var(--surface2)}
 .kcard-comp{display:flex;align-items:center;gap:6px;font-size:11px}
 .kcard-comp-ok{color:var(--green);font-weight:500}
 .kcard-comp-pend{color:var(--amber);font-weight:500}
+.kcard-icon-btn{background:none;border:none;cursor:pointer;color:var(--text3);padding:4px;border-radius:var(--r4);display:flex;align-items:center;gap:4px;font-size:10px;font-family:var(--fn);transition:color .15s;line-height:1}
+.kcard-icon-btn:hover{color:var(--text2)}
+.kcard-icon-btn.edit:hover{color:#3B82F6}
+.kcard-icon-btn.del:hover{color:var(--red)}
 
 /* Column accent lines */
 .kcol-wait .kcol-name::before{content:'';width:8px;height:8px;border-radius:50%;background:#F59E0B;display:inline-block}
@@ -179,7 +188,7 @@ tr:hover td{background:var(--surface2)}
 .mttl{font-size:15px;font-weight:700;letter-spacing:-.3px}
 .msub{font-size:11px;color:var(--text3);margin-top:2px}
 .mx{background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;line-height:1;padding:2px;border-radius:var(--r4);transition:all .12s;flex-shrink:0}.mx:hover{color:var(--text);background:var(--surface2)}
-.mbd{padding:18px 20px;flex:1}
+.mbd{padding:18px 20px;flex:1;overflow-y:auto;min-height:0}
 .mft{padding:12px 20px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:var(--surface2);border-radius:0 0 var(--r12) var(--r12);flex-shrink:0}
 .mft-nav{display:flex;gap:6px;align-items:center}
 .mft-r{display:flex;gap:8px}

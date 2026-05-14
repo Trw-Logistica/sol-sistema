@@ -222,11 +222,11 @@ export default function Cargas() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           {admin && <span className="kcard-liq" style={{ color: lq >= 0 ? 'var(--green)' : 'var(--red)' }}>{fmtR(lq)}</span>}
                           <button
-                            className="kcard-edit-btn"
+                            className="kcard-icon-btn"
                             title={isExpanded ? 'Recolher' : 'Expandir'}
                             onClick={ev => { ev.stopPropagation(); toggleCard(c.id); }}
                           >
-                            <Icon n={isExpanded ? 'chevronUp' : 'chevronDown'} sz={12} />
+                            <Icon n={isExpanded ? 'chevronUp' : 'chevronDown'} sz={16} />
                           </button>
                         </div>
                       </div>
@@ -295,22 +295,20 @@ export default function Cargas() {
                                 <div style={{ display: 'flex', gap: 6 }}>
                                   {editable && (
                                     <button
-                                      className="kcard-edit-btn"
+                                      className="kcard-icon-btn edit"
                                       title="Editar carga"
-                                      style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', fontSize: 10 }}
                                       onClick={ev => { ev.stopPropagation(); setCargaEditando(c); }}
                                     >
-                                      <Icon n="edit" sz={11} /> Editar
+                                      <Icon n="edit" sz={16} /> Editar
                                     </button>
                                   )}
                                   {admin && (
                                     <button
-                                      className="kcard-edit-btn"
+                                      className="kcard-icon-btn del"
                                       title="Excluir carga"
-                                      style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', fontSize: 10, color: 'var(--red)' }}
                                       onClick={ev => { ev.stopPropagation(); setConfirmDelete(c.id); }}
                                     >
-                                      <Icon n="trash" sz={11} /> Excluir
+                                      <Icon n="trash" sz={16} /> Excluir
                                     </button>
                                   )}
                                 </div>

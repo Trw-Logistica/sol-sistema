@@ -41,7 +41,10 @@ const listar = async (req, res) => {
   let query = supabase
     .from('cargas')
     .select(`
-      *,
+      id, numero, status, cliente_id, motorista_id, criado_por,
+      origem, destino, data_coleta, previsao_entrega, data_entrega_real,
+      frete_cobrado, frete_pago, frete_liquido, cte, comprovante_url,
+      ocorrencias, criado_em, atualizado_em,
       clientes(id, nome),
       motoristas(id, nome, placa_cavalo),
       usuarios!criado_por(id, nome)

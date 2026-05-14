@@ -189,7 +189,7 @@ export default function Dashboard() {
     const m = {};
     list.forEach(c => {
       if (!c.cliente_id) return;
-      if (!['concluido', 'entregue'].includes(c.status)) return;
+      if (c.status !== 'concluido') return;
       const lq = parseFloat(c.frete_liquido);
       if (!lq) return;
       if (!m[c.cliente_id]) m[c.cliente_id] = { id: c.cliente_id, nome: c.clientes?.nome || '—', val: 0 };
@@ -204,7 +204,7 @@ export default function Dashboard() {
     const m = {};
     list.forEach(c => {
       if (!c.criado_por) return;
-      if (!['concluido', 'entregue'].includes(c.status)) return;
+      if (c.status !== 'concluido') return;
       const lq = parseFloat(c.frete_liquido);
       if (!lq) return;
       if (!m[c.criado_por]) m[c.criado_por] = { nome: c.usuarios?.nome || '—', val: 0 };

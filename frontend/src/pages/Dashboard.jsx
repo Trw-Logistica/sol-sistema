@@ -241,8 +241,8 @@ export default function Dashboard() {
   );
 
   const donut = [
-    { v: bySts.aguardando, c: '#F59E0B', l: 'Aguardando' },
-    { v: bySts.em_transito, c: '#3B82F6', l: 'Em Trânsito' },
+    { v: bySts.aguardando, c: '#F59E0B', l: 'Divulgação' },
+    { v: bySts.em_transito, c: '#3B82F6', l: 'Em Andamento' },
     { v: bySts.entregue, c: '#22C55E', l: 'Entregue' },
     { v: bySts.concluido, c: '#8B5CF6', l: 'Concluído' },
     { v: bySts.cancelado, c: '#EF4444', l: 'Cancelado' },

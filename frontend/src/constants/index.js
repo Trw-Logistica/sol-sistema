@@ -3,8 +3,8 @@ export const CARROCERIAS = ['Baú','Baú Frigorífico','Grade Baixa','Graneleiro
 export const OC_TIPOS = ['Atraso','Avaria','Devolução','Acidente','Outro'];
 
 export const STS = {
-  aguardando: 'Aguardando',
-  em_transito: 'Em Trânsito',
+  aguardando: 'Divulgação',
+  em_transito: 'Em Andamento',
   entregue: 'Entregue',
   concluido: 'Concluído',
   cancelado: 'Cancelado',

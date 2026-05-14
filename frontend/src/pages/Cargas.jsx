@@ -10,11 +10,10 @@ import SBadge from '../components/SBadge';
 import ModalNovaCarga from '../components/modals/ModalNovaCarga';
 import ModalDetalhe from '../components/modals/ModalDetalhe';
 
-const ALL_COLS = ['aguardando', 'em_transito', 'entregue', 'concluido', 'cancelado'];
+const ALL_COLS = ['aguardando', 'em_transito', 'concluido', 'cancelado'];
 const COL_CFG = {
-  aguardando:  { cls: 'kcol-wait', label: 'Aguardando' },
-  em_transito: { cls: 'kcol-tran', label: 'Em Trânsito' },
-  entregue:    { cls: 'kcol-delv', label: 'Entregue' },
+  aguardando:  { cls: 'kcol-wait', label: 'Divulgação' },
+  em_transito: { cls: 'kcol-tran', label: 'Em Andamento' },
   concluido:   { cls: 'kcol-done', label: 'Concluído' },
   cancelado:   { cls: 'kcol-canc', label: 'Cancelado' },
 };
@@ -91,7 +90,8 @@ export default function Cargas() {
     ALL_COLS.forEach(s => m[s] = []);
     allVisible.forEach(c => {
       if (c.status === 'concluido' && c.comprovante_url) return;
-      if (m[c.status]) m[c.status].push(c);
+      const slot = c.status === 'entregue' ? 'em_transito' : c.status;
+      if (m[slot]) m[slot].push(c);
     });
     ALL_COLS.forEach(s => m[s].sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em)));
     return m;

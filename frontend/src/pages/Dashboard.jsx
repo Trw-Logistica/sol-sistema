@@ -189,7 +189,7 @@ export default function Dashboard() {
     const m = {};
     list.forEach(c => {
       if (!c.cliente_id) return;
-      if (c.status !== 'concluido') return;
+      if (!['concluido', 'entregue'].includes(c.status)) return;
       if (!m[c.cliente_id]) m[c.cliente_id] = { id: c.cliente_id, nome: c.clientes?.nome || '—', val: 0 };
       m[c.cliente_id].val += (parseFloat(c.frete_cobrado) || 0) - (parseFloat(c.frete_pago) || 0);
     });
@@ -202,7 +202,7 @@ export default function Dashboard() {
     const m = {};
     list.forEach(c => {
       if (!c.criado_por) return;
-      if (c.status !== 'concluido') return;
+      if (!['concluido', 'entregue'].includes(c.status)) return;
       if (!m[c.criado_por]) m[c.criado_por] = { nome: c.usuarios?.nome || '—', val: 0 };
       const lq = c.frete_liquido != null
         ? parseFloat(c.frete_liquido)

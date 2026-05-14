@@ -24,6 +24,7 @@ function toInputVal(iso) {
 
 export default function TabMonitoramento({ cargaId, steps = [], canEdit, admin, onRefresh }) {
   const [saving, setSaving] = useState(null);
+  const [erro, setErro] = useState(null);
 
   const stepMap = {};
   steps.forEach(s => { stepMap[s.etapa] = s; });
@@ -35,6 +36,7 @@ export default function TabMonitoramento({ cargaId, steps = [], canEdit, admin, 
   };
 
   const handleToggle = async key => {
+    setErro(null);
     const nowDone = stepMap[key]?.concluido || false;
     if (!nowDone && key === 'descarga') {
       if (!confirm('Confirmar conclusão da carga? Isso irá mover para Concluído.')) return;
@@ -43,6 +45,8 @@ export default function TabMonitoramento({ cargaId, steps = [], canEdit, admin, 
     try {
       await updateMonitoramento(cargaId, key, { concluido: !nowDone });
       await onRefresh();
+    } catch (e) {
+      setErro(e?.response?.data?.error || e.message || 'Erro ao atualizar. Verifique se a migration foi aplicada no Supabase.');
     } finally {
       setSaving(null);
     }
@@ -50,10 +54,13 @@ export default function TabMonitoramento({ cargaId, steps = [], canEdit, admin, 
 
   const handleHorario = async (key, raw) => {
     if (!raw) return;
+    setErro(null);
     setSaving(key);
     try {
       await updateMonitoramento(cargaId, key, { concluido: true, horario: new Date(raw).toISOString() });
       await onRefresh();
+    } catch (e) {
+      setErro(e?.response?.data?.error || e.message || 'Erro ao salvar horário.');
     } finally {
       setSaving(null);
     }
@@ -61,31 +68,44 @@ export default function TabMonitoramento({ cargaId, steps = [], canEdit, admin, 
 
   return (
     <div className="mon-tl">
+      {erro && (
+        <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 6, padding: '8px 12px', fontSize: 12, color: '#DC2626', marginBottom: 14 }}>
+          ⚠ {erro}
+        </div>
+      )}
+
       {ETAPAS.map((etapa, idx) => {
         const step = stepMap[etapa.key] || {};
         const state = stateOf(etapa.key);
         const isLast = idx === ETAPAS.length - 1;
         const isSaving = saving === etapa.key;
-        const checkable = canEdit && !isSaving;
+        const isChecked = !!step.concluido;
 
         return (
           <div key={etapa.key} className="mon-step">
+            {/* Left: visual dot + connector */}
             <div className="mon-side">
-              <button
-                className={`mon-dot ${state}`}
-                onClick={checkable ? () => handleToggle(etapa.key) : undefined}
-                disabled={!checkable}
-                title={step.concluido ? 'Clique para desmarcar' : 'Marcar como concluído'}
-              >
-                {state === 'done' ? '✓' : idx + 1}
-              </button>
+              <div className={`mon-dot ${state}`}>{state === 'done' ? '✓' : idx + 1}</div>
               {!isLast && <div className={`mon-conn${state === 'done' ? ' done' : ''}`} />}
             </div>
 
+            {/* Right: checkbox + name + meta */}
             <div className="mon-body">
-              <div className={`mon-name ${state}`}>{etapa.label}</div>
+              <label className={`mon-label${!canEdit ? ' mon-label-ro' : ''}`}>
+                <input
+                  type="checkbox"
+                  className="mon-check"
+                  checked={isChecked}
+                  onChange={() => canEdit && !isSaving && handleToggle(etapa.key)}
+                  disabled={!canEdit || isSaving}
+                />
+                <span className={`mon-name ${state}`}>
+                  {etapa.label}
+                  {isSaving && <span style={{ fontSize: 10, color: 'var(--text3)', marginLeft: 6 }}>salvando…</span>}
+                </span>
+              </label>
 
-              {step.concluido ? (
+              {isChecked ? (
                 <div className="mon-meta">
                   {step.usuarios?.nome && (
                     <span className="mon-by">por <strong>{step.usuarios.nome}</strong></span>
@@ -102,10 +122,10 @@ export default function TabMonitoramento({ cargaId, steps = [], canEdit, admin, 
                     step.horario && <div className="mon-time">{fmtHorario(step.horario)}</div>
                   )}
                 </div>
-              ) : state === 'active' ? (
-                <div className="mon-hint">Aguardando confirmação</div>
               ) : (
-                <div className="mon-hint">Pendente</div>
+                <div className="mon-hint">
+                  {state === 'active' ? 'Em andamento' : 'Pendente'}
+                </div>
               )}
             </div>
           </div>

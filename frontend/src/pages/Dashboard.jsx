@@ -105,7 +105,6 @@ export default function Dashboard() {
   const [ranking, setRanking] = useState([]);
 
   useEffect(() => {
-    console.log('%c[SOL Dashboard] build: 2026-05-14-v4 | topCli = frete_liquido only', 'color:#22c55e;font-weight:bold;font-size:13px');
     listarCargas().then(setCargas);
     if (admin) getRanking().then(setRanking).catch(() => {});
   }, [admin]);
@@ -195,9 +194,6 @@ export default function Dashboard() {
     const m = {};
     list.forEach(c => {
       const nome = c.clientes?.nome || '—';
-      if (nome.toUpperCase().includes('MBRF') || (c.clientes?.nome || '').toUpperCase().includes('CVG')) {
-        console.log(`[topCli:${nome}]`, { id: c.id, numero: c.numero, status: c.status, frete_liquido: c.frete_liquido, frete_cobrado: c.frete_cobrado, frete_pago: c.frete_pago });
-      }
       if (!c.cliente_id) return;
       if (c.status !== 'concluido') return;
       const lq = parseFloat(c.frete_liquido);
@@ -244,7 +240,7 @@ export default function Dashboard() {
     { v: bySts.aguardando, c: '#F59E0B', l: 'Divulgação' },
     { v: bySts.em_transito, c: '#3B82F6', l: 'Em Andamento' },
     { v: bySts.entregue, c: '#22C55E', l: 'Entregue' },
-    { v: bySts.concluido, c: '#8B5CF6', l: 'Concluído' },
+    { v: bySts.concluido, c: '#22C55E', l: 'Concluído' },
     { v: bySts.cancelado, c: '#EF4444', l: 'Cancelado' },
   ];
 

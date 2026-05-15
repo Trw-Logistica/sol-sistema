@@ -2,7 +2,7 @@ const supabase = require('../config/supabase');
 
 const listar = async (req, res) => {
   let query = supabase
-    .from('templates_anuncio')
+    .from('templates')
     .select('*, clientes(id, nome), usuarios!criado_por(id, nome)')
     .order('created_at', { ascending: false });
 
@@ -18,7 +18,7 @@ const criar = async (req, res) => {
   if (!nome) return res.status(400).json({ error: 'Nome é obrigatório' });
 
   const { data, error } = await supabase
-    .from('templates_anuncio')
+    .from('templates')
     .insert({
       nome,
       cliente_id: cliente_id || null,
@@ -48,7 +48,7 @@ const atualizar = async (req, res) => {
   }
 
   const { data, error } = await supabase
-    .from('templates_anuncio')
+    .from('templates')
     .update(campos)
     .eq('id', id)
     .select('*, clientes(id, nome)')
@@ -60,7 +60,7 @@ const atualizar = async (req, res) => {
 
 const deletar = async (req, res) => {
   const { id } = req.params;
-  const { error } = await supabase.from('templates_anuncio').delete().eq('id', id);
+  const { error } = await supabase.from('templates').delete().eq('id', id);
   if (error) return res.status(500).json({ error: error.message });
   res.status(204).send();
 };

@@ -55,7 +55,7 @@ sol-sistema/
 | `clientes` | Cadastro de clientes |
 | `cargas` | Principal · `frete_liquido` campo manual · número `CTE-{ANO}-{SEQ}` |
 | `cargas_monitoramento` | Etapas de monitoramento por carga (Carga · Trânsito · Descarga) |
-| `templates_anuncio` | Templates de anúncio WhatsApp salvos por cliente |
+| `templates` | Templates de anúncio WhatsApp salvos por cliente |
 | `anuncios_historico` | Histórico de divulgações |
 | `grupos_whatsapp` | Grupos com nome e link |
 

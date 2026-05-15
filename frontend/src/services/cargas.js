@@ -21,6 +21,9 @@ export const adicionarOcorrencia = (id, data) =>
 export const deletarCarga = id =>
   api.delete(`/cargas/${id}`);
 
+export const duplicarCarga = id =>
+  api.post(`/cargas/${id}/duplicar`).then(r => r.data);
+
 export const getMonitoramento = id =>
   api.get(`/cargas/${id}/monitoramento`).then(r => r.data);
 

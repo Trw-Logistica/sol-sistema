@@ -243,6 +243,52 @@ const adicionarOcorrencia = async (req, res) => {
   res.status(201).json(data);
 };
 
+const duplicar = async (req, res) => {
+  const { id } = req.params;
+
+  const acesso = await verificarAcesso(req, id);
+  if (acesso.erro) return res.status(acesso.status).json({ error: acesso.erro });
+
+  if (!['aguardando', 'em_transito'].includes(acesso.carga.status)) {
+    return res.status(400).json({ error: 'Apenas cargas em Divulgação ou Em Andamento podem ser duplicadas.' });
+  }
+
+  const { data: orig, error: fetchErr } = await supabase
+    .from('cargas')
+    .select('cliente_id, origem, destino, frete_cobrado, frete_pago, frete_liquido, criado_por, data_coleta, previsao_entrega')
+    .eq('id', id)
+    .single();
+
+  if (fetchErr || !orig) return res.status(404).json({ error: 'Carga não encontrada.' });
+
+  const numero = await gerarNumeroCarga();
+
+  const { data, error } = await supabase
+    .from('cargas')
+    .insert({
+      numero,
+      status: 'aguardando',
+      cliente_id: orig.cliente_id,
+      motorista_id: null,
+      origem: orig.origem,
+      destino: orig.destino,
+      frete_cobrado: orig.frete_cobrado,
+      frete_pago: orig.frete_pago,
+      frete_liquido: orig.frete_liquido,
+      criado_por: orig.criado_por,
+      data_coleta: orig.data_coleta,
+      previsao_entrega: orig.previsao_entrega,
+      cte: null,
+      comprovante_url: null,
+      ocorrencias: [],
+    })
+    .select(`*, clientes(id, nome), motoristas(id, nome, placa_cavalo), usuarios!criado_por(id, nome)`)
+    .single();
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.status(201).json(data);
+};
+
 const deletar = async (req, res) => {
   const { id } = req.params;
 
@@ -382,4 +428,4 @@ const updateMonitoramento = async (req, res) => {
   res.json(data);
 };
 
-module.exports = { listar, obter, criar, atualizar, atualizarStatus, adicionarOcorrencia, deletar, getMonitoramento, getMonitoramentoAtivos, updateMonitoramento };
+module.exports = { listar, obter, criar, atualizar, atualizarStatus, adicionarOcorrencia, duplicar, deletar, getMonitoramento, getMonitoramentoAtivos, updateMonitoramento };

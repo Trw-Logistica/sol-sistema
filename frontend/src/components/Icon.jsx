@@ -36,6 +36,7 @@ export default function Icon({ n, sz = 16, c = 'currentColor', sw = 2 }) {
     user: <svg {...s}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
     chart: <svg {...s}><path d="M3 3v18h18"/><path d="M7 12l4-4 4 4 5-5"/></svg>,
     menu: <svg {...s}><path d="M3 12h18M3 6h18M3 18h18"/></svg>,
+    copy: <svg {...s}><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>,
   };
 
   return icons[n] || null;

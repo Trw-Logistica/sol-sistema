@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { listarCargas, criarCarga, atualizarCarga, atualizarStatus, getMonitoramentoAtivos, deletarCarga } from '../services/cargas';
+import { listarCargas, criarCarga, atualizarCarga, atualizarStatus, getMonitoramentoAtivos, deletarCarga, duplicarCarga } from '../services/cargas';
 import { listarClientes } from '../services/clientes';
 import { listarMotoristas, criarMotorista as criarMot } from '../services/motoristas';
 import { listarUsuarios } from '../services/usuarios';
@@ -38,6 +38,7 @@ export default function Cargas() {
   );
   const dragId = useRef(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [toast, setToast] = useState(null);
 
   const toggleCard = id => setExpandedCards(prev => ({ ...prev, [id]: !prev[id] }));
 
@@ -111,6 +112,21 @@ export default function Cargas() {
     setCargas(prev => prev.filter(c => c.id !== id));
     setConfirmDelete(null);
     if (detailCarga?.id === id) setDetailCarga(null);
+  };
+
+  const showToast = msg => {
+    const id = Date.now();
+    setToast({ msg, id });
+    setTimeout(() => setToast(t => t?.id === id ? null : t), 3000);
+  };
+
+  const duplicar = async (ev, carga) => {
+    ev.stopPropagation();
+    try {
+      const nova = await duplicarCarga(carga.id);
+      setCargas(prev => [nova, ...prev]);
+      showToast('Carga duplicada com sucesso');
+    } catch {}
   };
 
   const canEdit = c => admin || c.criado_por === usuario?.id;
@@ -304,6 +320,15 @@ export default function Cargas() {
                                       <Icon n="edit" sz={16} /> Editar
                                     </button>
                                   )}
+                                  {editable && (c.status === 'aguardando' || c.status === 'em_transito') && (
+                                    <button
+                                      className="kcard-icon-btn dup"
+                                      title="Duplicar carga"
+                                      onClick={ev => duplicar(ev, c)}
+                                    >
+                                      <Icon n="copy" sz={16} /> Duplicar
+                                    </button>
+                                  )}
                                   {admin && (
                                     <button
                                       className="kcard-icon-btn del"
@@ -371,6 +396,8 @@ export default function Cargas() {
           onClose={() => setDetailCarga(null)}
         />
       )}
+
+      {toast && <div className="toast-ok">✓ {toast.msg}</div>}
     </div>
   );
 }

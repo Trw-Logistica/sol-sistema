@@ -8,6 +8,7 @@ const {
   atualizar,
   atualizarStatus,
   adicionarOcorrencia,
+  duplicar,
   deletar,
   getMonitoramento,
   getMonitoramentoAtivos,
@@ -23,6 +24,7 @@ router.post('/', criar);
 router.put('/:id', atualizar);
 router.patch('/:id/status', atualizarStatus);
 router.post('/:id/ocorrencia', adicionarOcorrencia);
+router.post('/:id/duplicar', duplicar);
 router.delete('/:id', deletar);
 router.get('/:id/monitoramento', getMonitoramento);
 router.patch('/:id/monitoramento/:etapa', updateMonitoramento);

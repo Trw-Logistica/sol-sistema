@@ -329,6 +329,16 @@ export default function Cargas() {
                                       <Icon n="copy" sz={16} /> Duplicar
                                     </button>
                                   )}
+                                  {(c.status === 'aguardando' || c.status === 'em_transito') && (
+                                    <button
+                                      className="kcard-icon-btn"
+                                      title="Divulgar no WhatsApp"
+                                      style={{ color: '#128c7e' }}
+                                      onClick={ev => { ev.stopPropagation(); window.dispatchEvent(new CustomEvent('sol:navigate', { detail: { page: 'templates', cargaId: c.id } })); }}
+                                    >
+                                      📲 Divulgar
+                                    </button>
+                                  )}
                                   {admin && (
                                     <button
                                       className="kcard-icon-btn del"

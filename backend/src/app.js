@@ -7,6 +7,7 @@ const motoristasRoutes = require('./routes/motoristas');
 const clientesRoutes = require('./routes/clientes');
 const cargasRoutes = require('./routes/cargas');
 const dashboardRoutes = require('./routes/dashboard');
+const templatesRoutes = require('./routes/templates');
 
 const app = express(); // S.O.L API
 
@@ -37,6 +38,7 @@ app.use('/api/motoristas', motoristasRoutes);
 app.use('/api/clientes', clientesRoutes);
 app.use('/api/cargas', cargasRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/templates', templatesRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

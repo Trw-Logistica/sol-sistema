@@ -8,6 +8,7 @@ import Historico from './pages/Historico';
 import Motoristas from './pages/Motoristas';
 import Clientes from './pages/Clientes';
 import Usuarios from './pages/Usuarios';
+import Templates from './pages/Templates';
 
 const SOL_LOGO = `data:image/svg+xml;utf8,${encodeURIComponent('<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="14" fill="%230B162A"/><path d="M16 4 Q5 10 5 16 Q5 22 16 28 Z" fill="%23C83803"/><circle cx="21" cy="11" r="1.5" fill="white"/><circle cx="23.5" cy="16" r="1.5" fill="white"/><circle cx="21" cy="21" r="1.5" fill="white"/><path d="M16 16 L21 11 M16 16 L23.5 16 M16 16 L21 21" stroke="white" stroke-width="1.3" fill="none" stroke-linecap="round"/></svg>')}`;
 
@@ -16,6 +17,13 @@ export default function App() {
   const [dark, setDark] = useState(() => localStorage.getItem('sol_dark') === 'true');
   const [sbMin, setSbMin] = useState(false);
   const [page, setPage] = useState('dashboard');
+  const [navData, setNavData] = useState({});
+
+  useEffect(() => {
+    const handler = e => { setNavData(e.detail); setPage(e.detail.page); };
+    window.addEventListener('sol:navigate', handler);
+    return () => window.removeEventListener('sol:navigate', handler);
+  }, []);
 
   useEffect(() => {
     document.body.setAttribute('data-theme', dark ? 'dark' : 'light');
@@ -32,16 +40,18 @@ export default function App() {
     { id: 'cargas',    icn: 'package',   label: 'Cargas' },
     { id: 'historico', icn: 'archive',   label: 'Histórico' },
     { id: 'motoristas',icn: 'truck',     label: 'Motoristas' },
+    { id: 'templates', icn: 'layers',    label: 'Templates' },
     ...(admin ? [{ id: 'clientes', icn: 'building', label: 'Clientes' }] : []),
     ...(admin ? [{ id: 'usuarios', icn: 'users',    label: 'Usuários' }] : []),
   ];
 
-  const titles = { dashboard: 'Dashboard', cargas: 'Cargas', historico: 'Histórico', motoristas: 'Motoristas', clientes: 'Clientes', usuarios: 'Usuários' };
+  const titles = { dashboard: 'Dashboard', cargas: 'Cargas', historico: 'Histórico', motoristas: 'Motoristas', templates: 'Templates', clientes: 'Clientes', usuarios: 'Usuários' };
   const subs   = {
     dashboard:  admin ? 'Visão geral das operações' : `Suas operações — ${usuario.nome}`,
     cargas:     'Operações ativas',
     historico:  admin ? 'Todas as cargas finalizadas' : 'Suas cargas finalizadas',
     motoristas: 'Motoristas cadastrados',
+    templates:  'Anúncios WhatsApp',
     clientes:   'Gestão de clientes',
     usuarios:   'Controle de acesso',
   };
@@ -72,7 +82,7 @@ export default function App() {
               <div
                 key={n.id}
                 className={`sb-item${page === n.id ? ' active' : ''}`}
-                onClick={() => setPage(n.id)}
+                onClick={() => { setPage(n.id); setNavData({}); }}
                 title={n.label}
               >
                 <div className="sb-item-icon"><Icon n={n.icn} sz={17} /></div>
@@ -121,6 +131,7 @@ export default function App() {
           {page === 'cargas'     && <Cargas />}
           {page === 'historico'  && <Historico />}
           {page === 'motoristas' && <Motoristas />}
+          {page === 'templates'  && <Templates cargaId={navData.cargaId} />}
           {page === 'clientes'   && admin && <Clientes />}
           {page === 'usuarios'   && admin && <Usuarios />}
         </div>

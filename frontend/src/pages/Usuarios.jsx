@@ -7,13 +7,19 @@ const BLANK = { nome: '', email: '', senha: '', perfil: 'operacional', telefone:
 export default function Usuarios() {
   const { usuario: me } = useAuth();
   const [users, setUsers] = useState([]);
+  const [loadErro, setLoadErro] = useState('');
   const [modal, setModal] = useState(false);
   const [edit, setEdit] = useState(null);
   const [f, setF] = useState(BLANK);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState('');
 
-  const carregar = () => listarUsuarios().then(setUsers);
+  const carregar = () => {
+    setLoadErro('');
+    listarUsuarios()
+      .then(setUsers)
+      .catch(err => setLoadErro(err.response?.data?.error || 'Erro ao carregar usuários'));
+  };
   useEffect(() => { carregar(); }, []);
 
   const setFld = k => ev => setF(p => ({ ...p, [k]: ev.target.value }));
@@ -60,6 +66,11 @@ export default function Usuarios() {
         <button className="btn btn-p" onClick={() => abrir(null)}>+ Novo usuário</button>
       </div>
 
+      {loadErro && (
+        <div style={{ background: 'var(--red-bg)', border: '1px solid var(--red-border)', color: 'var(--red)', borderRadius: 8, padding: '10px 14px', marginBottom: 12, fontSize: 12, fontWeight: 500 }}>
+          ⚠️ {loadErro}
+        </div>
+      )}
       <div className="card">
         <table>
           <thead>

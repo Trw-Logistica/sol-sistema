@@ -2,24 +2,38 @@ const bcrypt = require('bcryptjs');
 const supabase = require('../config/supabase');
 
 const listar = async (req, res) => {
+  // select('*') é resiliente ao cache de schema do PostgREST após ALTER TABLE
   const { data, error } = await supabase
     .from('usuarios')
-    .select('id, nome, email, perfil, ativo, telefone, criado_em')
+    .select('*')
     .order('nome');
 
   if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
+
+  // Remove campo sensível antes de retornar
+  const safe = (data || []).map(({ senha_hash, ...u }) => u);
+  res.json(safe);
 };
 
 // Endpoint público (auth, não admin) para seletor de responsável
 const listarResponsaveis = async (req, res) => {
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from('usuarios')
     .select('id, nome, telefone, perfil')
     .eq('ativo', true)
     .order('nome');
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) {
+    // Fallback: schema cache ainda não refletiu a coluna telefone
+    const fb = await supabase
+      .from('usuarios')
+      .select('id, nome, perfil')
+      .eq('ativo', true)
+      .order('nome');
+    if (fb.error) return res.status(500).json({ error: fb.error.message });
+    data = fb.data;
+  }
+
   res.json(data);
 };
 

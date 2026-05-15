@@ -3,6 +3,9 @@ const supabase = require('../config/supabase');
 
 const strip = ({ senha_hash, ...u }) => u;
 
+// PostgREST fails with this when a column isn't in its schema cache yet
+const isSchemaErr = msg => typeof msg === 'string' && msg.includes('telefone') && msg.includes('schema cache');
+
 const listar = async (req, res) => {
   const { data, error } = await supabase
     .from('usuarios')
@@ -35,12 +38,20 @@ const criar = async (req, res) => {
   }
 
   const senha_hash = await bcrypt.hash(senha, 10);
+  const base = { nome, email: email.toLowerCase().trim(), senha_hash, perfil };
 
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from('usuarios')
-    .insert({ nome, email: email.toLowerCase().trim(), senha_hash, perfil, telefone: telefone || null })
+    .insert({ ...base, telefone: telefone || null })
     .select('*')
     .single();
+
+  // Retry without telefone if schema cache hasn't picked up the new column yet
+  if (error && isSchemaErr(error.message)) {
+    const retry = await supabase.from('usuarios').insert(base).select('*').single();
+    data = retry.data;
+    error = retry.error;
+  }
 
   if (error) {
     if (error.code === '23505') return res.status(409).json({ error: 'Email já cadastrado' });
@@ -71,12 +82,25 @@ const atualizar = async (req, res) => {
     return res.status(400).json({ error: 'Nenhum campo para atualizar' });
   }
 
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from('usuarios')
     .update(updates)
     .eq('id', id)
     .select('*')
     .single();
+
+  // Retry without telefone if schema cache hasn't picked up the new column yet
+  if (error && isSchemaErr(error.message) && updates.telefone !== undefined) {
+    const { telefone: _t, ...updatesWithout } = updates;
+    const retry = await supabase
+      .from('usuarios')
+      .update(updatesWithout)
+      .eq('id', id)
+      .select('*')
+      .single();
+    data = retry.data;
+    error = retry.error;
+  }
 
   if (error) return res.status(500).json({ error: error.message });
   if (!data) return res.status(404).json({ error: 'Usuário não encontrado' });

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { listarUsuarios, criarUsuario, atualizarUsuario, deletarUsuario } from '../services/usuarios';
 
-const BLANK = { nome: '', email: '', senha: '', perfil: 'operacional' };
+const BLANK = { nome: '', email: '', senha: '', perfil: 'operacional', telefone: '' };
 
 export default function Usuarios() {
   const { usuario: me } = useAuth();
@@ -20,7 +20,7 @@ export default function Usuarios() {
 
   const abrir = u => {
     setEdit(u || null);
-    setF(u ? { nome: u.nome, email: u.email, senha: '', perfil: u.perfil } : BLANK);
+    setF(u ? { nome: u.nome, email: u.email, senha: '', perfil: u.perfil, telefone: u.telefone || '' } : BLANK);
     setErro('');
     setModal(true);
   };
@@ -29,7 +29,7 @@ export default function Usuarios() {
     if (!f.nome || !f.email || (!edit && !f.senha)) return;
     setSalvando(true); setErro('');
     try {
-      const payload = { nome: f.nome, email: f.email, perfil: f.perfil };
+      const payload = { nome: f.nome, email: f.email, perfil: f.perfil, telefone: f.telefone || null };
       if (f.senha) payload.senha = f.senha;
       if (edit) {
         await atualizarUsuario(edit.id, payload);
@@ -63,7 +63,7 @@ export default function Usuarios() {
       <div className="card">
         <table>
           <thead>
-            <tr>{['Nome', 'Email', 'Perfil', ''].map(x => <th key={x}>{x}</th>)}</tr>
+            <tr>{['Nome', 'Email', 'Perfil', 'WhatsApp', ''].map(x => <th key={x}>{x}</th>)}</tr>
           </thead>
           <tbody>
             {users.map(u => (
@@ -83,6 +83,7 @@ export default function Usuarios() {
                     {u.perfil === 'admin' ? 'Admin' : 'Operacional'}
                   </span>
                 </td>
+                <td className="mono" style={{ fontSize: 12, color: 'var(--text3)' }}>{u.telefone || '—'}</td>
                 <td>
                   <div style={{ display: 'flex', gap: 6 }}>
                     <button className="btn btn-g btn-sm" onClick={() => abrir(u)}>Editar</button>
@@ -115,6 +116,7 @@ export default function Usuarios() {
                   <option value="admin">Admin</option>
                 </select>
               </div>
+              <div className="fg"><label className="fl">WhatsApp (opcional)</label><input className="fi" value={f.telefone} onChange={setFld('telefone')} placeholder="5511999999999" /></div>
               {erro && <div className="lerr">{erro}</div>}
             </div>
             <div className="mft">

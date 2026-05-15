@@ -43,6 +43,7 @@ const login = async (req, res) => {
       nome: usuario.nome,
       email: usuario.email,
       perfil: usuario.perfil,
+      telefone: usuario.telefone || null,
     },
   });
 };

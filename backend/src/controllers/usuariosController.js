@@ -4,7 +4,19 @@ const supabase = require('../config/supabase');
 const listar = async (req, res) => {
   const { data, error } = await supabase
     .from('usuarios')
-    .select('id, nome, email, perfil, ativo, criado_em')
+    .select('id, nome, email, perfil, ativo, telefone, criado_em')
+    .order('nome');
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+};
+
+// Endpoint público (auth, não admin) para seletor de responsável
+const listarResponsaveis = async (req, res) => {
+  const { data, error } = await supabase
+    .from('usuarios')
+    .select('id, nome, telefone, perfil')
+    .eq('ativo', true)
     .order('nome');
 
   if (error) return res.status(500).json({ error: error.message });
@@ -12,7 +24,7 @@ const listar = async (req, res) => {
 };
 
 const criar = async (req, res) => {
-  const { nome, email, senha, perfil } = req.body;
+  const { nome, email, senha, perfil, telefone } = req.body;
 
   if (!nome || !email || !senha || !perfil) {
     return res.status(400).json({ error: 'Campos obrigatórios: nome, email, senha, perfil' });
@@ -26,8 +38,8 @@ const criar = async (req, res) => {
 
   const { data, error } = await supabase
     .from('usuarios')
-    .insert({ nome, email: email.toLowerCase().trim(), senha_hash, perfil })
-    .select('id, nome, email, perfil, ativo, criado_em')
+    .insert({ nome, email: email.toLowerCase().trim(), senha_hash, perfil, telefone: telefone || null })
+    .select('id, nome, email, perfil, ativo, telefone, criado_em')
     .single();
 
   if (error) {
@@ -40,7 +52,7 @@ const criar = async (req, res) => {
 
 const atualizar = async (req, res) => {
   const { id } = req.params;
-  const { nome, email, senha, perfil, ativo } = req.body;
+  const { nome, email, senha, perfil, ativo, telefone } = req.body;
 
   const updates = {};
   if (nome !== undefined) updates.nome = nome;
@@ -53,6 +65,7 @@ const atualizar = async (req, res) => {
   }
   if (ativo !== undefined) updates.ativo = ativo;
   if (senha) updates.senha_hash = await bcrypt.hash(senha, 10);
+  if (telefone !== undefined) updates.telefone = telefone || null;
 
   if (Object.keys(updates).length === 0) {
     return res.status(400).json({ error: 'Nenhum campo para atualizar' });
@@ -62,7 +75,7 @@ const atualizar = async (req, res) => {
     .from('usuarios')
     .update(updates)
     .eq('id', id)
-    .select('id, nome, email, perfil, ativo, criado_em')
+    .select('id, nome, email, perfil, ativo, telefone, criado_em')
     .single();
 
   if (error) return res.status(500).json({ error: error.message });
@@ -84,4 +97,4 @@ const deletar = async (req, res) => {
   res.status(204).send();
 };
 
-module.exports = { listar, criar, atualizar, deletar };
+module.exports = { listar, listarResponsaveis, criar, atualizar, deletar };

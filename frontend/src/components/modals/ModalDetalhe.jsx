@@ -6,8 +6,15 @@ import SBadge from '../SBadge';
 import TabMonitoramento from './TabMonitoramento';
 
 const ETAPA_LABELS = { carregamento: 'Carga', em_transito: 'Trânsito', descarga: 'Descarga' };
+const ETAPA_ICONS  = { carregamento: '📦', em_transito: '🚛', descarga: '🏭' };
 const ETAPA_ORDER  = ['carregamento', 'em_transito', 'descarga'];
 const MON_STATUS   = ['em_transito', 'entregue'];
+
+const fCard = { background: '#F7F6F4', borderRadius: 10, padding: '10px 13px' };
+const fLabel = { fontSize: 10, color: 'var(--text3)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.4px', marginBottom: 3 };
+const fValue = { fontSize: 13, color: 'var(--text)', fontWeight: 500 };
+const divider = { height: 1, background: 'var(--border)', margin: '16px 0' };
+const secTitle = { fontSize: 12, fontWeight: 600, color: 'var(--text2)', marginBottom: 10 };
 
 export default function ModalDetalhe({ carga: cargaProp, total, idx, onPrev, onNext, clientes, mots, operacionais = [], onMonRefresh, onUpdate, onAddOc, onClose }) {
   const { usuario, isAdmin } = useAuth();
@@ -24,9 +31,16 @@ export default function ModalDetalhe({ carga: cargaProp, total, idx, onPrev, onN
   const canEdit = admin || carga.criado_por === usuario?.id;
   const mot = carga.motoristas || mots?.find(m => m.id === carga.motorista_id);
   const cli = carga.clientes || clientes?.find(c => c.id === carga.cliente_id);
-  const lq = carga.frete_liquido != null ? parseFloat(carga.frete_liquido) : (parseFloat(carga.frete_cobrado) || 0) - (parseFloat(carga.frete_pago) || 0);
+  const lq = carga.frete_liquido != null
+    ? parseFloat(carga.frete_liquido)
+    : (parseFloat(carga.frete_cobrado) || 0) - (parseFloat(carga.frete_pago) || 0);
+  const cobrado = parseFloat(carga.frete_cobrado) || 0;
+  const margem = cobrado > 0 ? Math.round((lq / cobrado) * 100) : null;
 
   const showMon = MON_STATUS.includes(carga.status);
+
+  const stepMap = {};
+  monSteps.forEach(s => { stepMap[s.etapa] = s; });
 
   const carregarMon = async () => {
     if (!showMon) return;
@@ -44,7 +58,6 @@ export default function ModalDetalhe({ carga: cargaProp, total, idx, onPrev, onN
     if (showMon && monSteps.length === 0) carregarMon();
   }, [carga.status]);
 
-  // Compute header info for em_transito
   const lastCheckedKey = ETAPA_ORDER.slice().reverse().find(k => monSteps.find(s => s.etapa === k)?.concluido);
   const anyStepDone = !!lastCheckedKey;
   const monSubtitle = lastCheckedKey ? `• ${ETAPA_LABELS[lastCheckedKey]} em andamento` : null;
@@ -52,9 +65,8 @@ export default function ModalDetalhe({ carga: cargaProp, total, idx, onPrev, onN
   const tabs = [
     { id: 'info', label: 'Info' },
     { id: 'cte',  label: 'CTE' },
-    { id: 'fin',  label: 'Financeiro' },
+    { id: 'mon',  label: 'Monitoramento' },
     { id: 'oc',   label: `Ocorrências (${(carga.ocorrencias || []).length})` },
-    ...(showMon ? [{ id: 'mon', label: 'Monitoramento' }] : []),
   ];
 
   const salvarStatus = async status => {
@@ -93,24 +105,15 @@ export default function ModalDetalhe({ carga: cargaProp, total, idx, onPrev, onN
     } finally { setSalvando(false); }
   };
 
-  const handleMonRefresh = async () => {
-    await carregarMon();
-    onMonRefresh?.();
-  };
-
-  const handleCargaComplete = async () => {
-    await carregarMon();
-    await onUpdate();
-  };
-
-  const handleClose = () => {
-    setClosing(true);
-    setTimeout(onClose, 180);
-  };
+  const handleMonRefresh = async () => { await carregarMon(); onMonRefresh?.(); };
+  const handleCargaComplete = async () => { await carregarMon(); await onUpdate(); };
+  const handleClose = () => { setClosing(true); setTimeout(onClose, 180); };
 
   return (
     <div className={`ov${closing ? ' closing' : ''}`}>
-      <div className={`modal${closing ? ' closing' : ''}`}>
+      <div className={`modal${closing ? ' closing' : ''}`} style={{ height: '90vh', overflowY: 'hidden' }}>
+
+        {/* ── HEADER ── */}
         <div className="mhd">
           <div>
             {showMon ? (
@@ -139,51 +142,71 @@ export default function ModalDetalhe({ carga: cargaProp, total, idx, onPrev, onN
           <button className="mx" onClick={handleClose}>×</button>
         </div>
 
-        <div className="mbd">
-          {mot && (
-            <div className="driver-card">
-              <div className="driver-av">🚛</div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 13, fontWeight: 700 }}>{mot.nome}</div>
-                <div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mo)', marginTop: 2 }}>
-                  {[mot.tipo_veiculo || mot.carroceria, mot.placa_cavalo, mot.placa_carreta].filter(Boolean).join(' · ')}
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="pbar" style={{ marginBottom: 16 }}>
+        {/* ── TAB BAR (fixed, outside scrollable body) ── */}
+        <div style={{ padding: '0 20px', borderBottom: '1px solid var(--border)', flexShrink: 0, background: 'var(--surface)' }}>
+          <div style={{ display: 'flex', gap: 2 }}>
             {tabs.map(t => (
-              <button key={t.id} className={`pb${tab === t.id ? ' on' : ''}`} onClick={() => setTab(t.id)}>
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                style={{
+                  padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer',
+                  fontSize: 12, fontWeight: 600, fontFamily: 'var(--fn)',
+                  color: tab === t.id ? 'var(--accent)' : 'var(--text3)',
+                  borderBottom: tab === t.id ? '2px solid var(--accent)' : '2px solid transparent',
+                  marginBottom: -1, transition: 'color .15s, border-color .15s',
+                }}
+              >
                 {t.label}
               </button>
             ))}
           </div>
+        </div>
 
+        {/* ── BODY (scrollable) ── */}
+        <div className="mbd">
+
+          {/* INFO */}
           {tab === 'info' && (
             <div>
-              <div className="dgrid">
-                <div className="di"><div className="dil">Nº da Carga</div><div className="div2 mono">{carga.numero}</div></div>
-                <div className="di"><div className="dil">Cliente</div><div className="div2">{cli?.nome || '—'}</div></div>
-                <div className="di"><div className="dil">Origem</div><div className="div2">{carga.origem}</div></div>
-                <div className="di"><div className="dil">Destino</div><div className="div2">{carga.destino}</div></div>
-                <div className="di"><div className="dil">Data Coleta</div><div className="div2">{fmtD(carga.data_coleta)}</div></div>
-                <div className="di"><div className="dil">Prev. Entrega</div><div className="div2">{fmtD(carga.previsao_entrega)}</div></div>
-                <div className="di"><div className="dil">Entrega Real</div><div className="div2">{fmtD(carga.data_entrega_real)}</div></div>
-                <div className="di">
-                  <div className="dil">Comprovante</div>
-                  <div className="div2">
-                    {carga.comprovante_url
-                      ? <span style={{ color: 'var(--green)', fontWeight: 600 }}>✓ Recebido</span>
-                      : <span style={{ color: 'var(--amber)' }}>Pendente</span>
-                    }
+              {mot && (
+                <div className="driver-card" style={{ marginBottom: 16 }}>
+                  <div className="driver-av">🚛</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700 }}>{mot.nome}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mo)', marginTop: 2 }}>
+                      {[mot.tipo_veiculo || mot.carroceria, mot.placa_cavalo, mot.placa_carreta].filter(Boolean).join(' · ')}
+                    </div>
                   </div>
+                  <SBadge status={carga.status} />
                 </div>
-                <div className="di"><div className="dil">Responsável</div><div className="div2">{carga.usuarios?.nome || '—'}</div></div>
+              )}
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 4 }}>
+                {[
+                  ['Nº da Carga', <span style={{ fontFamily: 'var(--mo)' }}>{carga.numero}</span>],
+                  ['Cliente', cli?.nome || '—'],
+                  ['Origem', carga.origem],
+                  ['Destino', carga.destino],
+                  ['Data Coleta', fmtD(carga.data_coleta)],
+                  ['Prev. Entrega', fmtD(carga.previsao_entrega)],
+                  ['Entrega Real', fmtD(carga.data_entrega_real)],
+                  ['Comprovante', carga.comprovante_url
+                    ? <span style={{ color: 'var(--green)', fontWeight: 600 }}>✓ Recebido</span>
+                    : <span style={{ color: 'var(--amber)' }}>Pendente</span>],
+                  ['Responsável', carga.usuarios?.nome || '—'],
+                ].map(([label, value], i) => (
+                  <div key={i} style={fCard}>
+                    <div style={fLabel}>{label}</div>
+                    <div style={fValue}>{value}</div>
+                  </div>
+                ))}
               </div>
 
+              <div style={divider} />
+
               {admin && operacionais.length > 0 && (
-                <div className="fg" style={{ marginTop: 14 }}>
+                <div className="fg" style={{ marginBottom: 10 }}>
                   <label className="fl">Atribuir a operacional</label>
                   <div style={{ display: 'flex', gap: 8 }}>
                     <select className="fi" value={opSel} onChange={ev => setOpSel(ev.target.value)} disabled={salvando} style={{ flex: 1 }}>
@@ -194,15 +217,13 @@ export default function ModalDetalhe({ carga: cargaProp, total, idx, onPrev, onN
                   </div>
                 </div>
               )}
-
               {!carga.comprovante_url && canEdit && (
-                <button className="btn btn-p btn-sm" style={{ marginTop: 10 }} onClick={confirmarComprovante} disabled={salvando}>
+                <button className="btn btn-p btn-sm" style={{ marginBottom: 10 }} onClick={confirmarComprovante} disabled={salvando}>
                   Confirmar recebimento
                 </button>
               )}
-
               {canEdit && (
-                <div className="fg" style={{ marginTop: 14 }}>
+                <div className="fg">
                   <label className="fl">Atualizar status</label>
                   <select className="fi" value={carga.status} onChange={ev => salvarStatus(ev.target.value)} disabled={salvando}>
                     {Object.entries(STS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
@@ -212,35 +233,100 @@ export default function ModalDetalhe({ carga: cargaProp, total, idx, onPrev, onN
             </div>
           )}
 
+          {/* CTE + FINANCEIRO */}
           {tab === 'cte' && (
             <div>
+              <div style={secTitle}>Documento CTE</div>
               <div className={`ibox ${carga.cte ? 'ibox-ok' : 'ibox-warn'}`}>
                 {carga.cte ? `✓ CTE registrado: ${carga.cte}` : '⚠ CTE pendente — preencha quando o veículo carregar'}
               </div>
               {canEdit && (
-                <div>
-                  <div className="fg"><label className="fl">Número do CTE</label><input className="fi" value={cteV} onChange={ev => setCteV(ev.target.value)} placeholder="CTE-000000" /></div>
+                <div style={{ marginTop: 10 }}>
+                  <div className="fg">
+                    <label className="fl">Número do CTE</label>
+                    <input className="fi" value={cteV} onChange={ev => setCteV(ev.target.value)} placeholder="CTE-000000" />
+                  </div>
                   <button className="btn btn-p btn-sm" onClick={salvarCTE} disabled={salvando}>Salvar CTE</button>
                 </div>
+              )}
+
+              <div style={divider} />
+
+              <div style={secTitle}>Financeiro</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+                <div style={fCard}>
+                  <div style={fLabel}>Cobrado</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: '#1E3A8A', fontFamily: 'var(--mo)' }}>{fmtR(carga.frete_cobrado)}</div>
+                </div>
+                <div style={fCard}>
+                  <div style={fLabel}>Pago</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: '#92400E', fontFamily: 'var(--mo)' }}>{fmtR(carga.frete_pago)}</div>
+                </div>
+                <div style={{ background: lq >= 0 ? '#F0FDF4' : '#FEF2F2', border: `1px solid ${lq >= 0 ? '#86EFAC' : '#FECACA'}`, borderRadius: 10, padding: '10px 13px' }}>
+                  <div style={fLabel}>Líquido</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: lq >= 0 ? '#15803D' : '#DC2626', fontFamily: 'var(--mo)' }}>{fmtR(lq)}</div>
+                  {margem !== null && (
+                    <div style={{ fontSize: 10, color: lq >= 0 ? '#16A34A' : '#EF4444', fontWeight: 600, marginTop: 4 }}>{margem}% margem</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* MONITORAMENTO */}
+          {tab === 'mon' && (
+            <div>
+              {!showMon ? (
+                <div style={{ padding: '32px 0', textAlign: 'center', color: 'var(--text3)', fontSize: 13 }}>
+                  Monitoramento disponível quando a carga estiver em trânsito.
+                </div>
+              ) : (
+                <>
+                  {/* Progress bar */}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', marginBottom: 24 }}>
+                    {ETAPA_ORDER.map((key, i) => {
+                      const done = !!stepMap[key]?.concluido;
+                      const isActive = !done && ETAPA_ORDER.find(k => !stepMap[k]?.concluido) === key;
+                      return (
+                        <div key={key} style={{ display: 'flex', alignItems: 'center', flex: i < 2 ? 1 : 'initial' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                            <div style={{
+                              width: 36, height: 36, borderRadius: '50%',
+                              background: done ? '#22C55E' : isActive ? '#3B82F6' : '#E5E7EB',
+                              color: done || isActive ? '#fff' : '#9CA3AF',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              fontSize: done ? 16 : 13, fontWeight: 700,
+                              boxShadow: isActive ? '0 0 0 5px rgba(59,130,246,.18)' : 'none',
+                              animation: isActive ? 'mon-pulse 1.8s ease-in-out infinite' : 'none',
+                              transition: 'background .3s, box-shadow .3s', flexShrink: 0,
+                            }}>
+                              {done ? '✓' : i + 1}
+                            </div>
+                            <div style={{ fontSize: 10, fontWeight: 600, textAlign: 'center', whiteSpace: 'nowrap', color: done ? '#16A34A' : isActive ? '#2563EB' : '#9CA3AF' }}>
+                              {ETAPA_ICONS[key]} {ETAPA_LABELS[key]}
+                            </div>
+                          </div>
+                          {i < 2 && (
+                            <div style={{ flex: 1, height: 3, background: done ? '#22C55E' : '#E5E7EB', margin: '0 8px', marginBottom: 22, borderRadius: 2, transition: 'background .3s' }} />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <TabMonitoramento
+                    cargaId={carga.id}
+                    steps={monSteps}
+                    canEdit={canEdit}
+                    onRefresh={handleMonRefresh}
+                    onComplete={handleCargaComplete}
+                  />
+                </>
               )}
             </div>
           )}
 
-          {tab === 'fin' && (
-            <div>
-              <div className="dgrid">
-                <div className="di"><div className="dil">Frete Cobrado</div><div className="div2 mono sv-bl">{fmtR(carga.frete_cobrado)}</div></div>
-                <div className="di"><div className="dil">Frete Pago</div><div className="div2 mono sv-am">{fmtR(carga.frete_pago)}</div></div>
-              </div>
-              <div className={`frete-liq-box${lq < 0 ? ' neg' : ''}`} style={{ marginTop: 12 }}>
-                <div className={`frete-liq-label${lq < 0 ? ' neg' : ''}`}>Frete Líquido</div>
-                <div className={`frete-liq-input${lq < 0 ? ' neg' : ''}`} style={{ display: 'flex', alignItems: 'center' }}>
-                  {fmtR(lq)}
-                </div>
-              </div>
-            </div>
-          )}
-
+          {/* OCORRÊNCIAS */}
           {tab === 'oc' && (
             <div>
               {(carga.ocorrencias || []).length === 0 && (
@@ -283,18 +369,9 @@ export default function ModalDetalhe({ carga: cargaProp, total, idx, onPrev, onN
               )}
             </div>
           )}
-
-          {tab === 'mon' && showMon && (
-            <TabMonitoramento
-              cargaId={carga.id}
-              steps={monSteps}
-              canEdit={canEdit}
-              onRefresh={handleMonRefresh}
-              onComplete={handleCargaComplete}
-            />
-          )}
         </div>
 
+        {/* ── FOOTER ── */}
         <div className="mft">
           <div className="mft-nav">
             <button className="btn btn-s btn-sm" disabled={idx === 0} onClick={onPrev}>← Anterior</button>

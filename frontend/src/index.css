@@ -189,7 +189,7 @@ tr:hover td{background:var(--surface2)}
 @keyframes modal-out{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(.95)}}
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);animation:ov-in 200ms ease-out}
 .ov.closing{animation:ov-out 180ms ease-in forwards}
-.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--r12);width:100%;max-width:560px;max-height:92vh;overflow-y:auto;box-shadow:var(--sh-lg);display:flex;flex-direction:column;animation:modal-in 200ms ease-out}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--r12);width:100%;max-width:560px;max-height:92vh;box-shadow:var(--sh-lg);display:flex;flex-direction:column;animation:modal-in 200ms ease-out}
 .modal.closing{animation:modal-out 180ms ease-in forwards}
 .mhd{padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;flex-shrink:0;gap:12px}
 .mttl{font-size:15px;font-weight:700;letter-spacing:-.3px}

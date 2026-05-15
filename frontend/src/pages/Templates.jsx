@@ -4,7 +4,7 @@ import { listarTemplates, criarTemplate, deletarTemplate } from '../services/tem
 import { listarClientes } from '../services/clientes';
 import { listarCargas, obterCarga } from '../services/cargas';
 import { listarGrupos, criarGrupo, deletarGrupo } from '../services/grupos';
-import { listarResponsaveis } from '../services/usuarios';
+import { listarUsuarios, listarResponsaveis } from '../services/usuarios';
 import { VEICULOS, fmtD } from '../constants';
 import CidadeSelect from '../components/CidadeSelect';
 import Icon from '../components/Icon';
@@ -164,13 +164,14 @@ export default function Templates({ cargaId: initCargaId }) {
       listarTemplates(),
       listarClientes(),
       listarGrupos().catch(() => []),
-      listarResponsaveis().catch(() => []),
+      (admin ? listarUsuarios() : listarResponsaveis()).catch(() => []),
     ]);
     setTemplates(ts);
     setClientes(cl);
     setGrupos(gps);
+    console.log('[Templates] usuários carregados:', ops);
     setOperacionais(ops);
-  }, []);
+  }, [admin]);
 
   useEffect(() => { carregar(); }, [carregar]);
 

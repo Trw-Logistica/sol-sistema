@@ -5,11 +5,24 @@ import { listarClientes } from '../services/clientes';
 import { listarCargas, obterCarga } from '../services/cargas';
 import { listarGrupos, criarGrupo, deletarGrupo } from '../services/grupos';
 import { listarResponsaveis } from '../services/usuarios';
-import { VEICULOS, fmtD } from '../constants';
+import { VEICULOS, fmtD, fmtTel } from '../constants';
 import CidadeSelect from '../components/CidadeSelect';
 import Icon from '../components/Icon';
 
 /* ── helpers ───────────────────────────────────────────── */
+
+const toWALink = n => {
+  const d = n.replace(/\D/g, '');
+  return `wa.me/${(d.length === 10 || d.length === 11) ? '55' + d : d}`;
+};
+
+const applyMask = val => {
+  let d = val.replace(/\D/g, '');
+  if ((d.length === 12 || d.length === 13) && d.startsWith('55')) d = d.slice(2);
+  if (d.length === 11) return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+  if (d.length === 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  return d;
+};
 
 const EMPTY_FORM = {
   coleta: false, coleta_data: '',
@@ -33,7 +46,7 @@ function buildMsg(f) {
   if (nums.length) {
     lines.push('');
     lines.push('Interessados chamar no WhatsApp:');
-    nums.forEach(n => lines.push(`wa.me/${n.replace(/\D/g, '')}`));
+    nums.forEach(n => lines.push(toWALink(n)));
   }
   return lines.join('\n');
 }
@@ -50,7 +63,7 @@ function buildMsgFromTemplate(t) {
   if (nums.length) {
     lines.push('');
     lines.push('Interessados chamar no WhatsApp:');
-    nums.forEach(n => lines.push(`wa.me/${n.replace(/\D/g, '')}`));
+    nums.forEach(n => lines.push(toWALink(n)));
   }
   return lines.join('\n');
 }
@@ -134,7 +147,7 @@ export default function Templates({ cargaId: initCargaId }) {
   const [clientes, setClientes] = useState([]);
   const [grupos, setGrupos] = useState([]);
   const [operacionais, setOperacionais] = useState([]);
-  const [responsavel, setResponsavel] = useState('');
+  const [responsaveis, setResponsaveis] = useState([]);
   const [filterCliente, setFilterCliente] = useState('todos');
 
   // modals / ui
@@ -178,7 +191,7 @@ export default function Templates({ cargaId: initCargaId }) {
   // auto-fill logged-in user's phone on mount
   useEffect(() => {
     if (usuario?.telefone) {
-      setForm(f => ({ ...f, numeros: [usuario.telefone] }));
+      setForm(f => ({ ...f, numeros: [applyMask(usuario.telefone)] }));
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -219,18 +232,22 @@ export default function Templates({ cargaId: initCargaId }) {
     setShowCargaModal(false);
   };
 
-  const handleResponsavel = id => {
-    setResponsavel(id);
-    if (!id) return;
+  const addResponsavel = id => {
+    if (!id || responsaveis.includes(id)) return;
     const op = operacionais.find(u => u.id === id);
     if (!op) return;
+    setResponsaveis(prev => [...prev, id]);
     if (!op.telefone) { showToast(`${op.nome} não tem telefone cadastrado`); return; }
+    const tel = applyMask(op.telefone);
     setForm(f => {
-      if (f.numeros.includes(op.telefone)) return f;
+      const already = f.numeros.some(n => n.replace(/\D/g, '') === tel.replace(/\D/g, ''));
+      if (already) return f;
       const clean = f.numeros.filter(n => n.trim());
-      return { ...f, numeros: clean.length ? [...clean, op.telefone] : [op.telefone] };
+      return { ...f, numeros: clean.length ? [...clean, tel] : [tel] };
     });
   };
+
+  const removeResponsavel = id => setResponsaveis(prev => prev.filter(r => r !== id));
 
   const handleSaveTemplate = async () => {
     if (!saveNome.trim()) return;
@@ -245,6 +262,7 @@ export default function Templates({ cargaId: initCargaId }) {
         produto: form.produto || null,
         veiculo: form.veiculo || null,
         numeros_whatsapp: form.numeros.filter(n => n.trim()),
+        responsaveis_ids: responsaveis,
       });
       await carregar();
       setShowSave(false);
@@ -262,8 +280,9 @@ export default function Templates({ cargaId: initCargaId }) {
       peso: t.peso || '',
       produto: t.produto || '',
       veiculo: t.veiculo || '',
-      numeros: t.numeros_whatsapp?.length ? t.numeros_whatsapp : [''],
+      numeros: t.numeros_whatsapp?.length ? t.numeros_whatsapp.map(applyMask) : [''],
     });
+    setResponsaveis([]);
     setLinkedCarga(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     showToast(`Template "${t.nome}" carregado`);
@@ -279,16 +298,18 @@ export default function Templates({ cargaId: initCargaId }) {
     const msg = buildMsg(form);
     const nums = form.numeros.filter(n => n.trim());
     if (!nums.length) { showToast('Adicione ao menos um número'); return; }
-    const clean = nums[0].replace(/\D/g, '');
-    window.open(`https://wa.me/${clean}?text=${encodeURIComponent(msg)}`, '_blank');
+    const d = nums[0].replace(/\D/g, '');
+    const num = (d.length === 10 || d.length === 11) ? '55' + d : d;
+    window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
   const handleWACard = t => {
     const msg = buildMsgFromTemplate(t);
     const nums = (t.numeros_whatsapp || []).filter(n => n.trim());
     if (!nums.length) { showToast('Template sem número cadastrado'); return; }
-    const clean = nums[0].replace(/\D/g, '');
-    window.open(`https://wa.me/${clean}?text=${encodeURIComponent(msg)}`, '_blank');
+    const d = nums[0].replace(/\D/g, '');
+    const num = (d.length === 10 || d.length === 11) ? '55' + d : d;
+    window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
   const handleCopy = async () => {
@@ -394,18 +415,31 @@ export default function Templates({ cargaId: initCargaId }) {
             <VeiculoInput value={form.veiculo} onChange={v => upd('veiculo', v)} />
           </div>
 
-          {/* Responsável */}
+          {/* Responsáveis */}
           <div style={FG}>
-            <div style={FL}>Responsável</div>
+            <div style={FL}>Responsáveis</div>
+            {responsaveis.map(id => {
+              const u = operacionais.find(op => op.id === id);
+              if (!u) return null;
+              return (
+                <div key={id} style={{ display: 'flex', gap: 6, marginBottom: 6, alignItems: 'center' }}>
+                  <div style={{ flex: 1, background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 8, padding: '6px 10px', fontSize: 12, color: 'var(--text)' }}>
+                    <span style={{ fontWeight: 600 }}>{u.nome}</span>
+                    {u.telefone && <span style={{ color: 'var(--text3)', marginLeft: 6 }}>{fmtTel(u.telefone)}</span>}
+                  </div>
+                  <button type="button" onClick={() => removeResponsavel(id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: 18, padding: '0 4px', lineHeight: 1 }}>×</button>
+                </div>
+              );
+            })}
             <select
               className="fi"
-              value={responsavel}
-              onChange={e => handleResponsavel(e.target.value)}
+              value=""
+              onChange={e => addResponsavel(e.target.value)}
             >
-              <option value="">Selecione para adicionar número...</option>
-              {operacionais.map(u => (
+              <option value="">{responsaveis.length === 0 ? 'Selecione para adicionar...' : '+ Adicionar outro...'}</option>
+              {operacionais.filter(u => !responsaveis.includes(u.id)).map(u => (
                 <option key={u.id} value={u.id}>
-                  {u.nome}{u.telefone ? ` · ${u.telefone}` : ' (sem WhatsApp)'}
+                  {u.nome}{u.telefone ? ` · ${fmtTel(u.telefone)}` : ' (sem WhatsApp)'}
                 </option>
               ))}
             </select>
@@ -421,9 +455,9 @@ export default function Templates({ cargaId: initCargaId }) {
               <div key={i} style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
                 <input
                   className="fi"
-                  placeholder="5511999999999"
+                  placeholder="(11) 99999-9999"
                   value={n}
-                  onChange={e => setNumero(i, e.target.value)}
+                  onChange={e => setNumero(i, applyMask(e.target.value))}
                   style={{ flex: 1 }}
                 />
                 {form.numeros.length > 1 && (

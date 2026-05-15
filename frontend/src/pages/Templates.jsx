@@ -4,7 +4,7 @@ import { listarTemplates, criarTemplate, deletarTemplate } from '../services/tem
 import { listarClientes } from '../services/clientes';
 import { listarCargas, obterCarga } from '../services/cargas';
 import { listarGrupos, criarGrupo, deletarGrupo } from '../services/grupos';
-import { listarUsuarios, listarResponsaveis } from '../services/usuarios';
+import { listarResponsaveis } from '../services/usuarios';
 import { VEICULOS, fmtD } from '../constants';
 import CidadeSelect from '../components/CidadeSelect';
 import Icon from '../components/Icon';
@@ -161,17 +161,17 @@ export default function Templates({ cargaId: initCargaId }) {
 
   const carregar = useCallback(async () => {
     const [ts, cl, gps, ops] = await Promise.all([
-      listarTemplates(),
-      listarClientes(),
-      listarGrupos().catch(() => []),
-      (admin ? listarUsuarios() : listarResponsaveis()).catch(() => []),
+      listarTemplates().catch(err => { console.error('[Templates] templates:', err); return []; }),
+      listarClientes().catch(err => { console.error('[Templates] clientes:', err); return []; }),
+      listarGrupos().catch(err => { console.warn('[Templates] grupos:', err); return []; }),
+      listarResponsaveis().catch(err => { console.error('[Templates] usuários:', err?.response?.data || err.message); return []; }),
     ]);
     setTemplates(ts);
     setClientes(cl);
     setGrupos(gps);
-    console.log('[Templates] usuários carregados:', ops);
+    console.log('[Templates] usuários carregados:', ops.length, ops);
     setOperacionais(ops);
-  }, [admin]);
+  }, []);
 
   useEffect(() => { carregar(); }, [carregar]);
 

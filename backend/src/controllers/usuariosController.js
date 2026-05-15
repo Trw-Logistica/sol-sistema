@@ -1,40 +1,27 @@
 const bcrypt = require('bcryptjs');
 const supabase = require('../config/supabase');
 
+const strip = ({ senha_hash, ...u }) => u;
+
 const listar = async (req, res) => {
-  // select('*') é resiliente ao cache de schema do PostgREST após ALTER TABLE
   const { data, error } = await supabase
     .from('usuarios')
     .select('*')
     .order('nome');
 
   if (error) return res.status(500).json({ error: error.message });
-
-  // Remove campo sensível antes de retornar
-  const safe = (data || []).map(({ senha_hash, ...u }) => u);
-  res.json(safe);
+  res.json((data || []).map(strip));
 };
 
-// Endpoint público (auth, não admin) para seletor de responsável
 const listarResponsaveis = async (req, res) => {
-  let { data, error } = await supabase
+  const { data, error } = await supabase
     .from('usuarios')
-    .select('id, nome, telefone, perfil')
+    .select('*')
     .eq('ativo', true)
     .order('nome');
 
-  if (error) {
-    // Fallback: schema cache ainda não refletiu a coluna telefone
-    const fb = await supabase
-      .from('usuarios')
-      .select('id, nome, perfil')
-      .eq('ativo', true)
-      .order('nome');
-    if (fb.error) return res.status(500).json({ error: fb.error.message });
-    data = fb.data;
-  }
-
-  res.json(data);
+  if (error) return res.status(500).json({ error: error.message });
+  res.json((data || []).map(({ id, nome, telefone, perfil }) => ({ id, nome, telefone: telefone || null, perfil })));
 };
 
 const criar = async (req, res) => {
@@ -43,7 +30,6 @@ const criar = async (req, res) => {
   if (!nome || !email || !senha || !perfil) {
     return res.status(400).json({ error: 'Campos obrigatórios: nome, email, senha, perfil' });
   }
-
   if (!['admin', 'operacional'].includes(perfil)) {
     return res.status(400).json({ error: 'Perfil inválido. Use: admin ou operacional' });
   }
@@ -53,7 +39,7 @@ const criar = async (req, res) => {
   const { data, error } = await supabase
     .from('usuarios')
     .insert({ nome, email: email.toLowerCase().trim(), senha_hash, perfil, telefone: telefone || null })
-    .select('id, nome, email, perfil, ativo, telefone, criado_em')
+    .select('*')
     .single();
 
   if (error) {
@@ -61,7 +47,7 @@ const criar = async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 
-  res.status(201).json(data);
+  res.status(201).json(strip(data));
 };
 
 const atualizar = async (req, res) => {
@@ -89,13 +75,13 @@ const atualizar = async (req, res) => {
     .from('usuarios')
     .update(updates)
     .eq('id', id)
-    .select('id, nome, email, perfil, ativo, telefone, criado_em')
+    .select('*')
     .single();
 
   if (error) return res.status(500).json({ error: error.message });
   if (!data) return res.status(404).json({ error: 'Usuário não encontrado' });
 
-  res.json(data);
+  res.json(strip(data));
 };
 
 const deletar = async (req, res) => {
